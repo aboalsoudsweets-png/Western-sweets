@@ -15,9 +15,9 @@ button { cursor: pointer; border: none; background: none; font-family: inherit; 
   --border: rgba(255,0,0,0.15);
   --text: #f5e6d3;
   --text-muted: #b89968;
-  --primary: #dc143c;
-  --primary-dark: #a00829;
-  --primary-glow: rgba(220,20,60,0.35);
+  --primary: #d4af37;
+  --primary-dark: #b8962e;
+  --primary-glow: rgba(212,175,55,0.35);
   --gold: #d4af37;
   --gold-dark: #8b7500;
   --overlay: rgba(0,0,0,0.85);
@@ -33,12 +33,12 @@ html.light {
   --bg2: #ede8e0;
   --card: #ffffff;
   --card-hover: #faf5f0;
-  --border: rgba(220,20,60,0.1);
+  --border: rgba(212,175,55,0.2);
   --text: #2a2a2a;
   --text-muted: #8b6f47;
-  --primary: #c71f2f;
-  --primary-dark: #950818;
-  --primary-glow: rgba(199,31,47,0.25);
+  --primary: #d4af37;
+  --primary-dark: #b8962e;
+  --primary-glow: rgba(212,175,55,0.25);
 }
 
 body {
@@ -454,8 +454,8 @@ body::before {
 /* تنسيق أزرار الاختيارات (الحالة العادية) */
 .filter-btn {
     background-color: #ffffff !important; /* خلفية بيضاء صافية */
-    color: #800000 !important;          /* نص باللون النبيتي */
-    border: 2px solid #800000 !important; /* إطار نبيتي لتحديد الزرار */
+    color: #d4af37 !important;          /* نص باللون النبيتي */
+    border: 2px solid #d4af37 !important; /* إطار نبيتي لتحديد الزرار */
     padding: 1rem 2.5rem;
     border-radius: 50px;                 /* شكل بيضاوي أنيق */
     font-family: 'Cairo', sans-serif;
@@ -472,18 +472,18 @@ body::before {
 /* تنسيق الزرار عند الاختيار (القسم النشط) */
 /* يُفضل هنا عكس الألوان ليعرف العميل القسم الذي اختاره */
 .filter-btn.active {
-    background: #800000 !important;      /* خلفية نبيتي عند الاختيار */
-    color: #ffffff !important;           /* نص أبيض */
-    border-color: #8b0000 !important;
+    background: #d4af37 !important;      /* خلفية نبيتي عند الاختيار */
+    color: #000 !important;           /* نص أبيض */
+    border-color: #d4af37 !important;
     box-shadow: 0 8px 20px rgba(128, 0, 0, 0.3);
     transform: scale(1.05);
 }
 
 /* تأثير عند تمرير الماوس فوق الزرار */
 .filter-btn:hover:not(.active) {
-    background-color: #fff5f5 !important; /* تغيير خفيف جداً في الخلفية */
-    border-color: #a00000 !important;
-    color: #a00000 !important;
+    background-color: #fff8e1 !important; /* تغيير خفيف جداً في الخلفية */
+    border-color: #d4af37 !important;
+    color: #d4af37 !important;
     transform: translateY(-2px);
 }
 
@@ -588,7 +588,7 @@ body::before {
 }
 
 .drink-card:hover .card-overlay {
-  background: linear-gradient(to bottom, rgba(0,0,0,0.1), rgba(220,20,60,0.3));
+  background: linear-gradient(to bottom, rgba(0,0,0,0.1), rgba(212,175,55,0.25));
 }
 
 .card-badge {
@@ -1005,7 +1005,7 @@ body::before {
   width: 28px;
   height: 28px;
   border-radius: 4px;
-  background: #8b0000;
+  background: #b8962e;
   color: #fff;
   font-weight: 700;
   cursor: pointer;
@@ -1015,9 +1015,9 @@ body::before {
 }
 
 .cart-item-remove:hover {
-  background: #5a0000;
-  transform: scale(1.1);
-  box-shadow: 0 4px 12px rgba(139, 0, 0, 0.3);
+  background: #d4af37;
+  color: #000;
+  box-shadow: 0 4px 12px rgba(212,175,55,0.4);
 }
 
 /* TOAST */
@@ -1260,7 +1260,7 @@ footer p {
     position: absolute;
     top: 10px;
     right: 10px;
-    background: #ff4757;
+    background: #d4af37;
     color: white;
     width: 25px;
     height: 25px;
