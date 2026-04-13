@@ -53,7 +53,11 @@ body {
 }
 
 body::before {
-  ;
+  content: "";
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.55); /* درجة التغميق */
+  z-index: -1;
 }
 
 /* LOADING SCREEN */
@@ -1529,4 +1533,14 @@ footer p {
   transition: right 0.3s ease;
   box-shadow: -5px 0 20px rgba(0,0,0,0.7);
   border-left: 2px solid #d4af37;
+}
+
+
+
+.hero-title,
+.hero-sub {
+  text-shadow:
+    0 0 10px rgba(212,175,55,0.6),
+    0 0 20px rgba(212,175,55,0.4),
+    2px 2px 4px rgba(0,0,0,0.8);
 }
