@@ -457,29 +457,30 @@ body::before {
 
 /* تنسيق أزرار الاختيارات (الحالة العادية) */
 .filter-btn {
-    background-color: #ffffff !important; /* خلفية بيضاء صافية */
-    color: #d4af37 !important;          /* نص باللون النبيتي */
-    border: 2px solid #d4af37 !important; /* إطار نبيتي لتحديد الزرار */
-    padding: 1rem 2.5rem;
-    border-radius: 50px;                 /* شكل بيضاوي أنيق */
+    background: rgba(255, 255, 255, 0.6); /* شبه شفاف */
+    color: #8b6f47; /* بني ذهبي هادي */
+    border: 1px solid rgba(139, 111, 71, 0.4);
+    padding: 1rem 2.2rem;
+    border-radius: 12px;
     font-family: 'Cairo', sans-serif;
     font-weight: 700;
-    font-size: 1.2rem;
-    min-width: 140px;
+    font-size: 1.1rem;
+    min-width: 130px;
     cursor: pointer;
     transition: all 0.3s ease;
-    box-shadow: 0 4px 15px rgba(0,0,0,0.1); /* ظل خفيف لإبراز الزرار */
-    margin: 5px;
-    backdrop-filter: none;               /* إلغاء الشفافية القديمة */
+    
+    backdrop-filter: blur(8px); /* تأثير زجاجي خفيف */
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+}op-filter: none;               /* إلغاء الشفافية القديمة */
 }
 
 /* تنسيق الزرار عند الاختيار (القسم النشط) */
 /* يُفضل هنا عكس الألوان ليعرف العميل القسم الذي اختاره */
 .filter-btn.active {
-    background: #d4af37 !important;      /* خلفية نبيتي عند الاختيار */
-    color: #000 !important;           /* نص أبيض */
-    border-color: #d4af37 !important;
-    box-shadow: 0 8px 20px rgba(128, 0, 0, 0.3);
+    background: linear-gradient(135deg, #d4af37, #f2d06b); /* ذهبي */
+    color: #fff;
+    border-color: #d4af37;
+    box-shadow: 0 6px 20px rgba(212,175,55,0.4);
     transform: scale(1.05);
 }
 
@@ -497,11 +498,10 @@ body::before {
 
 
 .filter-btn:hover {
-  border-color: var(--primary);
-  color: #fff;
-  transform: translateY(-2px);
+    background: rgba(255, 255, 255, 0.85);
+    color: #5a452b;
+    transform: translateY(-2px);
 }
-
 /* RESPONSIVE BUTTONS */
 @media (max-width: 480px) {
   .filter-btn {
@@ -1165,9 +1165,8 @@ footer p {
 
 
 .welcome-text {
-  text-shadow: 1px 1px 2px rgba(0,0,0,0.5); /* لإبراز الخط على الخلفية الغامقة */
-  letter-spacing: 0.5px;
-  animation: fadeIn 2s ease-in; /* حركة خفيفة عند التحميل */
+    color: #8b6f47;
+    font-weight: 600;
 }
 
 @keyframes fadeIn {
@@ -1543,4 +1542,9 @@ footer p {
     0 0 10px rgba(212,175,55,0.6),
     0 0 20px rgba(212,175,55,0.4),
     2px 2px 4px rgba(0,0,0,0.8);
+}
+
+
+.filter-btn {
+    box-shadow: 0 6px 20px rgba(0,0,0,0.15);
 }
