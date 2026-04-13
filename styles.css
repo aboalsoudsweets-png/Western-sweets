@@ -1546,3 +1546,15 @@ footer p {
 .filter-btn {
     box-shadow: 0 6px 20px rgba(0,0,0,0.15);
 }
+
+
+
+.loading-content p {
+  font-family: 'Cairo', sans-serif;
+  color: #bfa27a;
+  margin-top: 20px;
+  font-size: 1.2rem;
+  animation: fadeIn 1s 0.8s ease both;
+
+  text-shadow: 0 1px 2px rgba(0,0,0,0.2);
+}
