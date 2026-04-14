@@ -131,8 +131,9 @@ try {
   drinks = defaultDrinks;
 }
 
-  setupEventListeners();
-  updateCartUI();
+ setupEventListeners();
+renderDrinks(); // 🔥 دي أهم سطر ناقص
+updateCartUI();
  
 
   setTimeout(() => {
