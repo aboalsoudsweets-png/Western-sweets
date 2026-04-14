@@ -1560,6 +1560,8 @@ footer p {
 }
 
 
+
+
 .loading-content p {
-  color: #6a4f28;
+  color: #6a4f28 !important;
 }
