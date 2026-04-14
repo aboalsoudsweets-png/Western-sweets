@@ -841,7 +841,7 @@ addToCartWithWeight();
 
 
 // دالة لتغيير التوفر (إخفاء أو إظهار)
-function toggleAvailability(id) {
+async function toggleAvailability(id) {
   const product = drinks.find(d => d.id === id);
 
   if (!product || !product.firebaseId) {
@@ -849,20 +849,33 @@ function toggleAvailability(id) {
     return;
   }
 
-  product.available = !product.available;
+  const newStatus = !product.available;
 
-  db.collection("products").doc(product.firebaseId).update({
-    available: product.available
-  })
-  .then(() => {
-    showToast("تم التحديث ✅");
-    renderAdminPanel();
-    renderAdminPanel();
-  })
-  .catch((error) => {
-    console.error(error);
-    showToast("حصل خطأ ❌");
+  await db.collection("products").doc(product.firebaseId).update({
+    available: newStatus
   });
+
+  showToast("تم التحديث ✅");
+
+  // 🔥 نعيد تحميل البيانات من Firebase
+  let snapshot = await db.collection("products").get();
+  const firebaseData = snapshot.docs.map(doc => ({
+    firebaseId: doc.id,
+    ...doc.data()
+  }));
+
+  drinks = defaultDrinks.map(localItem => {
+    const firebaseItem = firebaseData.find(f => f.id === localItem.id);
+
+    return {
+      ...localItem,
+      firebaseId: firebaseItem?.firebaseId,
+      available: firebaseItem?.available ?? true
+    };
+  });
+
+  renderAdminPanel();
+  renderDrinks();
 }
 
 
