@@ -856,7 +856,7 @@ function toggleAvailability(id) {
   })
   .then(() => {
     showToast("تم التحديث ✅");
-    
+    renderAdminPanel();
     renderAdminPanel();
   })
   .catch((error) => {
