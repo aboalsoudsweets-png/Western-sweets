@@ -175,14 +175,14 @@ return drink.nameAr.includes("صحن");
 
 // ========== FILTER FUNCTIONALITY ==========
 
-const namoraTypes = [
+const swareTypes = [
   { id: 'fustuk', name: 'بقلاوة فستق', keys: ['فستق', 'بستاشيو', 'بلوريا', 'صره', 'اسيا', 'كل واشكر فستق', 'دولمة', 'اساور', 'سنيورة'] },
   { id: 'loz', name: 'بقلاوة لوز', keys: ['مشكل لوز','لوكم بندق','اصابع كاجو ','بقلاوة اسطنبولي جوز','كنافة لوز','بورمة لوز','عش البلبل لوز','بقلاوة اسطنبولي لوز','بقلاوة لوز','صرة لوز','كل وشكر لوز','اصابع لوز','عش البلبل كاجو','وربات لوز','لوكم بندق', 'مشكل لوز'] },
   { id: 'mix', name: 'أصناف متنوعة', keys: ['عجوة','معمول جوز','غريبة'] }
 ];
 
 
-const baqlawaTypes = [
+const gatoTypes = [
   { id: 'fustuk', name: 'بقلاوة فستق', keys: ['فستق', 'بستاشيو', 'بلوريا', 'صره', 'اسيا', 'كل واشكر فستق', 'دولمة', 'اساور', 'سنيورة'] },
   { id: 'loz', name: 'بقلاوة لوز', keys: ['مشكل لوز','لوكم بندق','اصابع كاجو ','بقلاوة اسطنبولي جوز','كنافة لوز','بورمة لوز','عش البلبل لوز','بقلاوة اسطنبولي لوز','بقلاوة لوز','صرة لوز','كل وشكر لوز','اصابع لوز','عش البلبل كاجو','وربات لوز','لوكم بندق', 'مشكل لوز'] },
   { id: 'mix', name: 'أصناف متنوعة', keys: ['عجوة','معمول جوز','غريبة'] }
@@ -199,9 +199,9 @@ function filterDrinks(category) {
     btn.classList.toggle("active", btn.dataset.filter === category);
   });
 
-  if (category === "baqlawa") {
+  if (category === "gato") {
     subContainer.style.display = "flex";
-    subContainer.innerHTML = baqlawaTypes.map(type => `
+    subContainer.innerHTML = gatoTypes.map(type => `
       <button class="filter-btn sub-btn" onclick="filterSubCategory('${type.id}')"
         style="background: #1a1a1a; border: 1px solid #d4af37; font-size: 0.9rem; padding: 5px 15px;">
         ${type.name}
@@ -221,10 +221,10 @@ function filterDrinks(category) {
 }
 
 function filterSubCategory(subId) {
-  const typeData = baqlawaTypes.find(t => t.id === subId);
+  const typeData = gatoTypes.find(t => t.id === subId);
 
   const filtered = drinks.filter(d =>
-    d.category === "baqlawa" &&
+    d.category === "gato" &&
     typeData.keys.some(key => d.nameAr.includes(key))
   );
 
