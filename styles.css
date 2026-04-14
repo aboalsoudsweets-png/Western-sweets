@@ -1564,3 +1564,19 @@ footer p {
 .loading-content p {
   color: #6a4f28 !important;
 }
+/* دهبي فخم للنص الكبير */
+.gold-text {
+  background: linear-gradient(135deg, #d4af37, #f2d06b, #b8962e);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  text-shadow: 
+    0 0 20px rgba(212,175,55,0.5),
+    0 0 40px rgba(212,175,55,0.3);
+}
+
+/* دهبي للنص الصغير */
+.gold-sub {
+  color: #d4af37;
+  font-weight: 600;
+  text-shadow: 0 2px 6px rgba(0,0,0,0.4);
+}
