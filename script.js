@@ -453,18 +453,12 @@ updateWeightPrice(state.selectedDrink, multiplier);
 
 // ========== HANDLE QUICK ADD ==========
 function handleQuickAdd(event, drinkId) {
-event.stopPropagation();
-const drink = drinks.find(d => d.id === drinkId);
+  event.stopPropagation();
+  const drink = drinks.find(d => d.id === drinkId);
 
-if (drink) {
-if (isPlateItem(drink)) {
-// Plates: Add directly without weight selection
-addToCartSimple(drink);
-} else {
-// Non-plates: Show weight selection
-openWeightModal(drink);
-}
-}
+  if (drink) {
+    addToCartSimple(drink); // 🔥 إضافة مباشرة بدون أوزان
+  }
 }
 
 function addToCartWithWeight() {
