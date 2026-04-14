@@ -56,10 +56,9 @@ body::before {
   content: "";
   position: fixed;
   inset: 0;
-  background: rgba(255, 248, 230, 0.6); /* درجة التغميق */
+  background: rgba(0, 0, 0, 0.4);
   z-index: -1;
 }
-
 /* LOADING SCREEN */
 #loading-screen {
   position: fixed;
