@@ -115,15 +115,17 @@ try {
     }));
 
     // 🔥 ندمج الكود مع Firebase (الكود يكسب)
-    drinks = defaultDrinks.map(localItem => {
-      const firebaseItem = firebaseData.find(f => f.id === localItem.id);
+   drinks = defaultDrinks.map(localItem => {
+  const firebaseItem = firebaseData.find(f => f.id === localItem.id);
 
-      return {
-        ...localItem, // 👈 السعر من الكود
-        firebaseId: firebaseItem?.firebaseId,
-        available: firebaseItem?.available ?? true
-      };
-    });
+  if (!firebaseItem) return localItem; // 🔥 مهم جدا
+
+  return {
+    ...localItem,
+    firebaseId: firebaseItem.firebaseId,
+    available: firebaseItem.available
+  };
+});
   }
 
 } catch (error) {
@@ -288,8 +290,8 @@ async function uploadDefaultProducts() {
 // ========== CREATE CARD ==========
 function createDrinkCard(drink) {
   const card = document.createElement("div");
-if (drink.available === false) {
-  card.style.opacity = isAdmin ? "1" : "0.5";
+ if (drink.available === false && !isAdmin) {
+  card.style.opacity = "0.5";
 }
   card.className = "drink-card";
 
@@ -374,27 +376,7 @@ if (drink.available === false) {
     cursor: ${drink.available === false ? 'not-allowed' : 'pointer'};
   "
 >
-  <div class="card-img-wrap">
-
-  ${drink.available === false ? `
-    <div style="
-      position:absolute;
-      top:0;
-      left:0;
-      width:100%;
-      height:100%;
-      background: rgba(0,0,0,0.6);
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      color:#fff;
-      font-weight:bold;
-      font-size:18px;
-      z-index:2;
-    ">
-      غير متوفر ❌
-    </div>
-  ` : ''}
+  ${drink.available === false ? '❌ غير متوفر' : (qty > 0 ? '➕ المزيد' : '🛍 اضف للسلة')}
 </button>
 
 
@@ -962,4 +944,4 @@ function showToast(message) {
   setTimeout(() => {
     toast.style.opacity = "0";
   }, 2000);
-}
+}   
