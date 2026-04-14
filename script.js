@@ -5,7 +5,7 @@ id: "a4",
 nameAr: "  tart",
 nameEn: "",
 price: 500,
-category: "konafa",
+category: "tart",
 image: "1.png",
 desc: "نوع كنـافة ناعمة بتتعمل بالسمنة البلدي محشية جبنة عكاوي ونابلسية.",
 ingredients: []
