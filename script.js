@@ -288,8 +288,8 @@ async function uploadDefaultProducts() {
 // ========== CREATE CARD ==========
 function createDrinkCard(drink) {
   const card = document.createElement("div");
- if (drink.available === false && !isAdmin) {
-  card.style.opacity = "0.5";
+if (drink.available === false) {
+  card.style.opacity = isAdmin ? "1" : "0.5";
 }
   card.className = "drink-card";
 
@@ -374,7 +374,27 @@ function createDrinkCard(drink) {
     cursor: ${drink.available === false ? 'not-allowed' : 'pointer'};
   "
 >
-  ${drink.available === false ? '❌ غير متوفر' : (qty > 0 ? '➕ المزيد' : '🛍 اضف للسلة')}
+  <div class="card-img-wrap">
+
+  ${drink.available === false ? `
+    <div style="
+      position:absolute;
+      top:0;
+      left:0;
+      width:100%;
+      height:100%;
+      background: rgba(0,0,0,0.6);
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      color:#fff;
+      font-weight:bold;
+      font-size:18px;
+      z-index:2;
+    ">
+      غير متوفر ❌
+    </div>
+  ` : ''}
 </button>
 
 
