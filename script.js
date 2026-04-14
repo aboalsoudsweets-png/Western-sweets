@@ -7,6 +7,7 @@ nameEn: "",
 price: 500,
 category: "tart",
 image: "1.png",
+available: true,
 desc: "نوع كنـافة ناعمة بتتعمل بالسمنة البلدي محشية جبنة عكاوي ونابلسية.",
 ingredients: []
 }
@@ -107,30 +108,30 @@ try {
 
   if (snapshot.empty) {
     await uploadDefaultProducts();
-    drinks = defaultDrinks;
-  } else {
-    const firebaseData = snapshot.docs.map(doc => ({
-      firebaseId: doc.id,
-      ...doc.data()
-    }));
-
-    // 🔥 ندمج الكود مع Firebase (الكود يكسب)
-   drinks = defaultDrinks.map(localItem => {
-  const firebaseItem = firebaseData.find(f => f.id === localItem.id);
-
-  if (!firebaseItem) return localItem; // 🔥 مهم جدا
-
-  return {
-    ...localItem,
-    firebaseId: firebaseItem.firebaseId,
-    available: firebaseItem.available
-  };
-});
+    snapshot = await db.collection("products").get();
   }
+
+  const firebaseData = snapshot.docs.map(doc => ({
+    firebaseId: doc.id,
+    ...doc.data()
+  }));
+
+  drinks = defaultDrinks.map(localItem => {
+    const firebaseItem = firebaseData.find(f => f.id === localItem.id);
+
+    return {
+      ...localItem,
+      firebaseId: firebaseItem?.firebaseId,
+      available: firebaseItem?.available ?? true
+    };
+  });
 
 } catch (error) {
   console.error("🔥 Firebase مش شغال:", error);
-  drinks = defaultDrinks;
+  drinks = defaultDrinks.map(localItem => ({
+    ...localItem,
+    available: true
+  }));
 }
 
  setupEventListeners();
@@ -278,13 +279,44 @@ async function uploadDefaultProducts() {
   if (!snapshot.empty) return; // لو فيه بيانات بلاش
 
   for (let drink of defaultDrinks) {
-    await db.collection("products").add({
+    await db.collection("products").doc(drink.id).set({
       ...drink,
       available: true // تأكد من إضافة هذا المفتاح لكل منتج
     });
   }
 
   console.log("تم رفع المنتجات لأول مرة ✅");
+}
+
+async function reloadDrinksFromFirebase() {
+  const snapshot = await db.collection("products").get();
+  const firebaseData = snapshot.docs.map(doc => ({
+    firebaseId: doc.id,
+    ...doc.data()
+  }));
+
+  drinks = await Promise.all(defaultDrinks.map(async localItem => {
+    let firebaseItem = firebaseData.find(f => f.id === localItem.id || f.firebaseId === localItem.id);
+
+    if (!firebaseItem) {
+      firebaseItem = firebaseData.find(f =>
+        f.nameAr === localItem.nameAr &&
+        f.price === localItem.price &&
+        f.category === localItem.category
+      );
+    }
+
+    if (firebaseItem && !firebaseItem.id) {
+      await db.collection("products").doc(firebaseItem.firebaseId).update({ id: localItem.id });
+      firebaseItem.id = localItem.id;
+    }
+
+    return {
+      ...localItem,
+      firebaseId: firebaseItem?.firebaseId,
+      available: firebaseItem?.available ?? true
+    };
+  }));
 }
 
 // ========== CREATE CARD ==========
@@ -330,6 +362,7 @@ function createDrinkCard(drink) {
 
     <div style="text-align: right;">
       <div style="font-weight: bold; color: #fff; font-size: 1.1rem;">
+      
         ${drink.nameAr}
       </div>
 
@@ -844,37 +877,75 @@ addToCartWithWeight();
 
 // دالة لتغيير التوفر (إخفاء أو إظهار)
 async function toggleAvailability(id) {
-  const product = drinks.find(d => d.id === id);
+  let product = drinks.find(d => d.id === id);
 
-  if (!product || !product.firebaseId) {
+  if (!product) {
     showToast("خطأ في المنتج ❌");
     return;
   }
 
-  const newStatus = !product.available;
+  let firebaseId = product.firebaseId;
+  if (!firebaseId) {
+    const lookup = await db.collection("products").where("id", "==", id).get();
+    if (!lookup.empty) {
+      firebaseId = lookup.docs[0].id;
+      product.firebaseId = firebaseId;
+    } else {
+      const docRef = db.collection("products").doc(id);
+      const docSnapshot = await docRef.get();
+      if (docSnapshot.exists) {
+        firebaseId = docSnapshot.id;
+        product.firebaseId = firebaseId;
+      } else {
+        const snapshot = await db.collection("products").get();
+        const fallbackDoc = snapshot.docs.find(doc => {
+          const data = doc.data();
+          return data.nameAr === product.nameAr && data.price === product.price && data.category === product.category;
+        });
 
-  await db.collection("products").doc(product.firebaseId).update({
-    available: newStatus
-  });
+        if (fallbackDoc) {
+          firebaseId = fallbackDoc.id;
+          product.firebaseId = firebaseId;
+          if (!fallbackDoc.data().id) {
+            await db.collection("products").doc(firebaseId).update({ id: id });
+          }
+        }
+      }
+    }
+  }
+
+  const newStatus = !(product.available ?? true);
+
+  if (!firebaseId) {
+    firebaseId = id;
+    product.firebaseId = firebaseId;
+
+    try {
+      await db.collection("products").doc(firebaseId).set({
+        ...product,
+        id,
+        available: newStatus
+      });
+    } catch (error) {
+      console.error("Firebase create fallback failed:", error);
+      showToast(`خطأ في التحديث: ${error.message || 'غير معروف'}`);
+      return;
+    }
+  } else {
+    try {
+      await db.collection("products").doc(firebaseId).update({
+        available: newStatus
+      });
+    } catch (error) {
+      console.error("Firebase update failed:", error);
+      showToast(`خطأ في التحديث: ${error.message || 'غير معروف'}`);
+      return;
+    }
+  }
 
   showToast("تم التحديث ✅");
 
-  // 🔥 نعيد تحميل البيانات من Firebase
-  let snapshot = await db.collection("products").get();
-  const firebaseData = snapshot.docs.map(doc => ({
-    firebaseId: doc.id,
-    ...doc.data()
-  }));
-
-  drinks = defaultDrinks.map(localItem => {
-    const firebaseItem = firebaseData.find(f => f.id === localItem.id);
-
-    return {
-      ...localItem,
-      firebaseId: firebaseItem?.firebaseId,
-      available: firebaseItem?.available ?? true
-    };
-  });
+  await reloadDrinksFromFirebase();
 
   renderAdminPanel();
   renderDrinks();
