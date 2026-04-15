@@ -2,8 +2,8 @@
 const defaultDrinks = [
 {
 id: "a1",
-nameAr: "",
-nameEn: "واحد",
+nameAr: "تورته",
+nameEn: "",
 price: 0,
 category: "tart",
 image: "1.png",
@@ -13,8 +13,8 @@ ingredients: []
 },
 {
 id: "a2",
-nameAr: "اتنين",
-nameEn: "gato choclet",
+nameAr: "جاتو",
+nameEn: "",
 price: 0,
 category: "gato",
 image: "1.png",
@@ -24,8 +24,8 @@ ingredients: []
 },
 {
 id: "a3",
-nameAr: "باب",
-nameEn: "molten choclet",
+nameAr: "مولتن",
+nameEn: "",
 price: 0,
 category: "molten",
 image: "1.png",
@@ -35,8 +35,19 @@ ingredients: []
 },
 {
 id: "a4",
-nameAr: "",
-nameEn: "cheesecake ckoclet",
+nameAr: "كعكة",
+nameEn: "",
+price: 0,
+category: "torat",
+image: "1.png",
+available: true,
+desc: "",
+ingredients: []
+},
+{
+id: "a5",
+nameAr: "تشيز كيك",
+nameEn: "",
 price: 0,
 category: "cheesecake",
 image: "1.png",
@@ -45,9 +56,9 @@ desc: "",
 ingredients: []
 },
 {
-id: "a4",
-nameAr: "",
-nameEn: "millef ckoclet",
+id: "a6",
+nameAr: "بسكويت",
+nameEn: "",
 price: 0,
 category: "mille",
 image: "1.png",
@@ -56,22 +67,11 @@ desc: "",
 ingredients: []
 },
 {
-id: "a4",
-nameAr: "",
-nameEn: "eclair choclet",
+id: "a7",
+nameAr: "ميلفيه",
+nameEn: "",
 price: 0,
 category: "eclair",
-image: "1.png",
-available: true,
-desc: "",
-ingredients: []
-},
-{
-id: "a4",
-nameAr: "",
-nameEn: "tar choclet",
-price: 0,
-category: "tar",
 image: "1.png",
 available: true,
 desc: "",
@@ -92,8 +92,21 @@ const firebaseConfig = {
   measurementId: "G-C39993QJZF"
 };
 
-firebase.initializeApp(firebaseConfig);
-const db = firebase.firestore();
+let db = null;
+let firebaseAvailable = false;
+
+if (typeof firebase !== 'undefined' && firebase.initializeApp && firebase.firestore) {
+  try {
+    firebase.initializeApp(firebaseConfig);
+    db = firebase.firestore();
+    firebaseAvailable = true;
+  } catch (error) {
+    console.warn('Firebase initialization failed:', error);
+    firebaseAvailable = false;
+  }
+} else {
+  console.warn('Firebase is not available. Working in offline fallback mode.');
+}
 
 
 
@@ -134,9 +147,25 @@ weightModalOverlay: document.getElementById("weight-modal-overlay"),
 weightModalClose: document.getElementById("weight-modal-close")
 };
 
+window.addEventListener("error", (event) => {
+  console.error("Global error:", event.error || event.message);
+  const loading = document.getElementById("loading-screen");
+  if (loading) {
+    loading.style.display = "none";
+  }
+});
+
+window.addEventListener("unhandledrejection", (event) => {
+  console.error("Unhandled promise rejection:", event.reason);
+  const loading = document.getElementById("loading-screen");
+  if (loading) {
+    loading.style.display = "none";
+  }
+});
+
 // ========== INITIALIZATION ==========
 document.addEventListener("DOMContentLoaded", async () => {
-DOM.drinksGrid.style.display = "none";
+DOM.drinksGrid.style.display = "grid";
   // ✅ كود الأدمن (لوحده فوق)
   let clickCount = 0;
   let clickTimer = null;
@@ -169,31 +198,39 @@ DOM.drinksGrid.style.display = "none";
   }
 
   // ✅ Firebase لوحده
-try {
-  let snapshot = await db.collection("products").get();
+if (firebaseAvailable && db) {
+  try {
+    let snapshot = await db.collection("products").get();
 
-  if (snapshot.empty) {
-    await uploadDefaultProducts();
-    snapshot = await db.collection("products").get();
-  }
+    if (snapshot.empty) {
+      await uploadDefaultProducts();
+      snapshot = await db.collection("products").get();
+    }
 
-  const firebaseData = snapshot.docs.map(doc => ({
-    firebaseId: doc.id,
-    ...doc.data()
-  }));
+    const firebaseData = snapshot.docs.map(doc => ({
+      firebaseId: doc.id,
+      ...doc.data()
+    }));
 
-  drinks = await Promise.all(defaultDrinks.map(async localItem => {
-    const stableItem = await ensureStableFirebaseDoc(localItem, firebaseData);
+    drinks = await Promise.all(defaultDrinks.map(async localItem => {
+      const stableItem = await ensureStableFirebaseDoc(localItem, firebaseData);
 
-    return {
+      return {
+        ...localItem,
+        firebaseId: stableItem?.firebaseId,
+        available: stableItem?.available ?? true
+      };
+    }));
+
+  } catch (error) {
+    console.error("🔥 Firebase مش شغال:", error);
+    drinks = defaultDrinks.map(localItem => ({
       ...localItem,
-      firebaseId: stableItem?.firebaseId,
-      available: stableItem?.available ?? true
-    };
-  }));
-
-} catch (error) {
-  console.error("🔥 Firebase مش شغال:", error);
+      available: true
+    }));
+  }
+} else {
+  console.warn("Firebase غير متاح، سيتم استخدام المنتجات الافتراضية فقط.");
   drinks = defaultDrinks.map(localItem => ({
     ...localItem,
     available: true
@@ -205,12 +242,7 @@ renderDrinks(); // 🔥 دي أهم سطر ناقص
 updateCartUI();
  
 
-  setTimeout(() => {
-    const loading = document.getElementById("loading-screen");
-    if (loading) {
-      loading.style.display = "none";
-    }
-  }, 1000);
+ 
 
 });
 // 👇 كود الأدمن
@@ -220,12 +252,10 @@ updateCartUI();
 
 // ========== LOADING SCREEN ==========
 function hideLoadingScreen() {
-setTimeout(() => {
 DOM.loadingScreen.classList.add("fade-out");
 setTimeout(() => {
-DOM.loadingScreen.style.display = "none";
-}, 800);
-}, 2000);
+  DOM.loadingScreen.style.display = "none";
+}, 400);
 }
 
 // ========== NAVBAR SCROLL EFFECT ==========
@@ -248,23 +278,23 @@ return drink.nameAr.includes("صحن");
 
 
 const gatoTypes = [
-  { id: '4', name: 'فراشات', keys: ['فراشات', 'فرشات'] },
-  { id: '5', name: 'امواس', keys: ['امواس', 'مواس'] },
-  { id: '6', name: 'نواشف', keys: ['نواشف', 'ناشف'] },
-  { id: '13', name: 'كافيهات', keys: ['كافيهات', 'كافيه'] }
+  { id: '4', name: 'فراشات', keys: [] },
+  { id: '5', name: 'امواس', keys: [] },
+  { id: '6', name: ' نواشف', keys: [] },
+  { id: '13', name: ' كافيهات', keys: [] }
 ];
 
 const tartTypes = [
-  { id: '7', name: 'فراشات', keys: ['فراشات', 'فرشات'] },
-  { id: '8', name: 'امواس', keys: ['امواس', 'مواس'] },
-  { id: '9', name: 'اميركان', keys: ['اميركان'] },
-  { id: '14', name: 'ميني اميركان', keys: ['ميني اميركان', 'ميني أميركان'] }
+  { id: '7', name: 'فراشات', keys: [] },
+  { id: '8', name: 'امواس', keys: [] },
+  { id: '9', name: 'اميركان ', keys: [] },
+  { id: '14', name: 'ميني اميركان ', keys: [] }
 ];
 
 const swareTypes = [
-  { id: '10', name: 'شوكلت', keys: ['شوكلت', 'شوكولاتة'] },
-  { id: '11', name: 'كريمه', keys: ['كريمه'] },
-  { id: '12', name: 'أصناف متنوعة', keys: ['أصناف متنوعة'] }
+  { id: '10', name: '', keys: [] },
+  { id: '11', name: 'كريمه', keys: [] },
+  { id: '12', name: 'أصناف متنوعة', keys: [] }
 ];
 
 function filterDrinks(category) {
@@ -318,19 +348,10 @@ function filterSubCategory(subId, category) {
   const typeData = types.find(t => t.id === subId);
   if (!typeData) return;
 
-  let filtered = drinks.filter(d => {
-    const matchesKey = typeData.keys.some(key =>
-      (d.nameAr || '').includes(key) ||
-      (d.nameEn || '').includes(key)
-    );
-
-    return d.category === category && (typeData.keys.length === 0 || matchesKey);
-  });
-
-  if (filtered.length === 0) {
-    // لو مافيش منتجات فرعية مطابقة، نعرض جميع المنتجات في نفس التصنيف
-    filtered = drinks.filter(d => d.category === category);
-  }
+  const filtered = drinks.filter(d =>
+    d.category === category &&
+    typeData.keys.some(key => d.nameAr.includes(key))
+  );
 
   document.querySelectorAll('.sub-btn').forEach(btn => {
     btn.style.background = (btn.innerText === typeData.name) ? "#d4af37" : "#1a1a1a";
@@ -350,10 +371,10 @@ function displayFilteredDrinks(data) {
     return;
   }
 
-  data.forEach((drink, index) => {
+  data.forEach((drink) => {
     const card = createDrinkCard(drink);
     DOM.drinksGrid.appendChild(card);
-    setTimeout(() => card.classList.add("visible"), index * 50);
+    card.classList.add("visible");
   });
 }
 
@@ -368,13 +389,10 @@ function renderDrinks() {
 
   DOM.drinksGrid.innerHTML = "";
 
-  filtered.forEach((drink, index) => {
+  filtered.forEach((drink) => {
     const card = createDrinkCard(drink);
     DOM.drinksGrid.appendChild(card);
-
-    setTimeout(() => {
-      card.classList.add("visible");
-    }, index * 50);
+    card.classList.add("visible");
   });
 }
 
