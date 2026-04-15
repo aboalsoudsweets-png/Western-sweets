@@ -1,14 +1,80 @@
 // ========== DATA ==========
 const defaultDrinks = [
 {
-id: "a4",
-nameAr: "  tart",
-nameEn: "",
-price: 500,
+id: "a1",
+nameAr: "",
+nameEn: "واحد",
+price: 0,
 category: "tart",
 image: "1.png",
 available: true,
-desc: "نوع كنـافة ناعمة بتتعمل بالسمنة البلدي محشية جبنة عكاوي ونابلسية.",
+desc: "",
+ingredients: []
+},
+{
+id: "a2",
+nameAr: "اتنين",
+nameEn: "gato choclet",
+price: 0,
+category: "gato",
+image: "1.png",
+available: true,
+desc: "",
+ingredients: []
+},
+{
+id: "a3",
+nameAr: "باب",
+nameEn: "molten choclet",
+price: 0,
+category: "molten",
+image: "1.png",
+available: true,
+desc: "",
+ingredients: []
+},
+{
+id: "a4",
+nameAr: "",
+nameEn: "cheesecake ckoclet",
+price: 0,
+category: "cheesecake",
+image: "1.png",
+available: true,
+desc: "",
+ingredients: []
+},
+{
+id: "a4",
+nameAr: "",
+nameEn: "millef ckoclet",
+price: 0,
+category: "mille",
+image: "1.png",
+available: true,
+desc: "",
+ingredients: []
+},
+{
+id: "a4",
+nameAr: "",
+nameEn: "eclair choclet",
+price: 0,
+category: "eclair",
+image: "1.png",
+available: true,
+desc: "",
+ingredients: []
+},
+{
+id: "a4",
+nameAr: "",
+nameEn: "tar choclet",
+price: 0,
+category: "tar",
+image: "1.png",
+available: true,
+desc: "",
 ingredients: []
 }
 
@@ -116,15 +182,15 @@ try {
     ...doc.data()
   }));
 
-  drinks = defaultDrinks.map(localItem => {
-    const firebaseItem = firebaseData.find(f => f.id === localItem.id);
+  drinks = await Promise.all(defaultDrinks.map(async localItem => {
+    const stableItem = await ensureStableFirebaseDoc(localItem, firebaseData);
 
     return {
       ...localItem,
-      firebaseId: firebaseItem?.firebaseId,
-      available: firebaseItem?.available ?? true
+      firebaseId: stableItem?.firebaseId,
+      available: stableItem?.available ?? true
     };
-  });
+  }));
 
 } catch (error) {
   console.error("🔥 Firebase مش شغال:", error);
@@ -182,50 +248,89 @@ return drink.nameAr.includes("صحن");
 
 
 const gatoTypes = [
-  { id: 'fustuk', name: 'شوكلت', keys: ['فستق', 'بستاشيو', 'بلوريا', 'صره', 'اسيا', 'كل واشكر فستق', 'دولمة', 'اساور', 'سنيورة'] },
-  { id: 'loz', name: 'كريمه', keys: ['مشكل لوز','لوكم بندق','اصابع كاجو ','بقلاوة اسطنبولي جوز','كنافة لوز','بورمة لوز','عش البلبل لوز','بقلاوة اسطنبولي لوز','بقلاوة لوز','صرة لوز','كل وشكر لوز','اصابع لوز','عش البلبل كاجو','وربات لوز','لوكم بندق', 'مشكل لوز'] },
-  { id: 'mix', name: 'أصناف متنوعة', keys: ['عجوة','معمول جوز','غريبة'] }
+  { id: '4', name: 'فراشات', keys: ['فراشات', 'فرشات'] },
+  { id: '5', name: 'امواس', keys: ['امواس', 'مواس'] },
+  { id: '6', name: 'نواشف', keys: ['نواشف', 'ناشف'] },
+  { id: '13', name: 'كافيهات', keys: ['كافيهات', 'كافيه'] }
+];
+
+const tartTypes = [
+  { id: '7', name: 'فراشات', keys: ['فراشات', 'فرشات'] },
+  { id: '8', name: 'امواس', keys: ['امواس', 'مواس'] },
+  { id: '9', name: 'اميركان', keys: ['اميركان'] },
+  { id: '14', name: 'ميني اميركان', keys: ['ميني اميركان', 'ميني أميركان'] }
+];
+
+const swareTypes = [
+  { id: '10', name: 'شوكلت', keys: ['شوكلت', 'شوكولاتة'] },
+  { id: '11', name: 'كريمه', keys: ['كريمه'] },
+  { id: '12', name: 'أصناف متنوعة', keys: ['أصناف متنوعة'] }
 ];
 
 function filterDrinks(category) {
   state.currentFilter = category;
   const subContainer = document.getElementById("sub-filters-container");
 
-  // 👇 نظهر الكروت أول ما المستخدم يضغط
   DOM.drinksGrid.style.display = "grid";
 
   DOM.filterBtns.forEach(btn => {
     btn.classList.toggle("active", btn.dataset.filter === category);
   });
 
-  if (category === "gato") {
+  const isSubCategory = category === "gato" || category === "sware" || category === "tart";
+  if (isSubCategory) {
+    const types = category === "gato"
+      ? gatoTypes
+      : category === "sware"
+        ? swareTypes
+        : tartTypes;
     subContainer.style.display = "flex";
-    subContainer.innerHTML = gatoTypes.map(type => `
-      <button class="filter-btn sub-btn" onclick="filterSubCategory('${type.id}')"
+    subContainer.innerHTML = types.map(type => `
+      <button class="filter-btn sub-btn" onclick="filterSubCategory('${type.id}', '${category}')"
         style="background: #1a1a1a; border: 1px solid #d4af37; font-size: 0.9rem; padding: 5px 15px;">
         ${type.name}
       </button>
     `).join("");
 
+    const titleText = category === "gato"
+      ? "اختر نوع البقلاوة المفضل لديك"
+      : category === "sware"
+        ? "اختر نوع السواريه المفضل لديك"
+        : "اختر نوع التورت المفضل لديك";
+
     DOM.drinksGrid.innerHTML = `
       <p style="color:#aaa; width:100%; text-align:center;">
-        اختر نوع البقلاوة المفضل لديك
+        ${titleText}
       </p>
     `;
-
   } else {
     subContainer.style.display = "none";
     renderDrinks();
   }
 }
 
-function filterSubCategory(subId) {
-  const typeData = gatoTypes.find(t => t.id === subId);
+function filterSubCategory(subId, category) {
+  const types = category === "gato"
+    ? gatoTypes
+    : category === "sware"
+      ? swareTypes
+      : tartTypes;
+  const typeData = types.find(t => t.id === subId);
+  if (!typeData) return;
 
-  const filtered = drinks.filter(d =>
-    d.category === "gato" &&
-    typeData.keys.some(key => d.nameAr.includes(key))
-  );
+  let filtered = drinks.filter(d => {
+    const matchesKey = typeData.keys.some(key =>
+      (d.nameAr || '').includes(key) ||
+      (d.nameEn || '').includes(key)
+    );
+
+    return d.category === category && (typeData.keys.length === 0 || matchesKey);
+  });
+
+  if (filtered.length === 0) {
+    // لو مافيش منتجات فرعية مطابقة، نعرض جميع المنتجات في نفس التصنيف
+    filtered = drinks.filter(d => d.category === category);
+  }
 
   document.querySelectorAll('.sub-btn').forEach(btn => {
     btn.style.background = (btn.innerText === typeData.name) ? "#d4af37" : "#1a1a1a";
@@ -251,6 +356,8 @@ function displayFilteredDrinks(data) {
     setTimeout(() => card.classList.add("visible"), index * 50);
   });
 }
+
+// ملاحظة: إذا لم تعمل الفلاتر، تأكد أن كل عنصر في drinks لديه category صحيح و أن keys في النوع تحتوي على كلمات مطابقة لـ nameAr.
 
 // ========== RENDER DRINKS ==========
 // دالة لعرض المنتجات من Firebase
@@ -288,6 +395,47 @@ async function uploadDefaultProducts() {
   console.log("تم رفع المنتجات لأول مرة ✅");
 }
 
+async function ensureStableFirebaseDoc(localItem, firebaseData) {
+  const stableRef = db.collection("products").doc(localItem.id);
+  const stableSnapshot = await stableRef.get();
+
+  if (stableSnapshot.exists) {
+    const data = stableSnapshot.data();
+    if (!data.id) {
+      await stableRef.update({ id: localItem.id });
+    }
+    return {
+      firebaseId: localItem.id,
+      ...data
+    };
+  }
+
+  let firebaseItem = firebaseData.find(f => f.id === localItem.id || f.firebaseId === localItem.id);
+
+  if (!firebaseItem) {
+    firebaseItem = firebaseData.find(f =>
+      f.nameAr === localItem.nameAr &&
+      f.price === localItem.price &&
+      f.category === localItem.category
+    );
+  }
+
+  if (firebaseItem) {
+    const copy = {
+      ...firebaseItem,
+      id: localItem.id,
+      available: firebaseItem.available ?? true
+    };
+    await stableRef.set(copy);
+    return {
+      ...copy,
+      firebaseId: localItem.id
+    };
+  }
+
+  return null;
+}
+
 async function reloadDrinksFromFirebase() {
   const snapshot = await db.collection("products").get();
   const firebaseData = snapshot.docs.map(doc => ({
@@ -296,25 +444,12 @@ async function reloadDrinksFromFirebase() {
   }));
 
   drinks = await Promise.all(defaultDrinks.map(async localItem => {
-    let firebaseItem = firebaseData.find(f => f.id === localItem.id || f.firebaseId === localItem.id);
-
-    if (!firebaseItem) {
-      firebaseItem = firebaseData.find(f =>
-        f.nameAr === localItem.nameAr &&
-        f.price === localItem.price &&
-        f.category === localItem.category
-      );
-    }
-
-    if (firebaseItem && !firebaseItem.id) {
-      await db.collection("products").doc(firebaseItem.firebaseId).update({ id: localItem.id });
-      firebaseItem.id = localItem.id;
-    }
+    const stableItem = await ensureStableFirebaseDoc(localItem, firebaseData);
 
     return {
       ...localItem,
-      firebaseId: firebaseItem?.firebaseId,
-      available: firebaseItem?.available ?? true
+      firebaseId: stableItem?.firebaseId,
+      available: stableItem?.available ?? true
     };
   }));
 }
@@ -877,67 +1012,41 @@ addToCartWithWeight();
 
 // دالة لتغيير التوفر (إخفاء أو إظهار)
 async function toggleAvailability(id) {
-  let product = drinks.find(d => d.id === id);
+  const product = drinks.find(d => d.id === id);
 
   if (!product) {
     showToast("خطأ في المنتج ❌");
     return;
   }
 
-  let firebaseId = product.firebaseId;
-  if (!firebaseId) {
-    const lookup = await db.collection("products").where("id", "==", id).get();
-    if (!lookup.empty) {
-      firebaseId = lookup.docs[0].id;
-      product.firebaseId = firebaseId;
-    } else {
-      const docRef = db.collection("products").doc(id);
-      const docSnapshot = await docRef.get();
-      if (docSnapshot.exists) {
-        firebaseId = docSnapshot.id;
-        product.firebaseId = firebaseId;
-      } else {
-        const snapshot = await db.collection("products").get();
-        const fallbackDoc = snapshot.docs.find(doc => {
-          const data = doc.data();
-          return data.nameAr === product.nameAr && data.price === product.price && data.category === product.category;
-        });
-
-        if (fallbackDoc) {
-          firebaseId = fallbackDoc.id;
-          product.firebaseId = firebaseId;
-          if (!fallbackDoc.data().id) {
-            await db.collection("products").doc(firebaseId).update({ id: id });
-          }
-        }
-      }
-    }
-  }
-
+  const stableRef = db.collection("products").doc(id);
+  const stableSnap = await stableRef.get();
   const newStatus = !(product.available ?? true);
 
-  if (!firebaseId) {
-    firebaseId = id;
-    product.firebaseId = firebaseId;
+  if (stableSnap.exists) {
+    try {
+      await stableRef.update({ available: newStatus });
+    } catch (error) {
+      console.error("Firebase update failed:", error);
+      showToast(`خطأ في التحديث: ${error.message || 'غير معروف'}`);
+      return;
+    }
+  } else {
+    const snapshot = await db.collection("products").get();
+    const firebaseData = snapshot.docs.map(doc => ({
+      firebaseId: doc.id,
+      ...doc.data()
+    }));
+    const stableItem = await ensureStableFirebaseDoc(product, firebaseData);
 
     try {
-      await db.collection("products").doc(firebaseId).set({
+      await stableRef.set({
         ...product,
         id,
         available: newStatus
       });
     } catch (error) {
       console.error("Firebase create fallback failed:", error);
-      showToast(`خطأ في التحديث: ${error.message || 'غير معروف'}`);
-      return;
-    }
-  } else {
-    try {
-      await db.collection("products").doc(firebaseId).update({
-        available: newStatus
-      });
-    } catch (error) {
-      console.error("Firebase update failed:", error);
       showToast(`خطأ في التحديث: ${error.message || 'غير معروف'}`);
       return;
     }
