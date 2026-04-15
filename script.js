@@ -121,7 +121,7 @@ let isAdmin = false;
  // ========== STATE MANAGEMENT ==========
 const state = {
 cart: JSON.parse(localStorage.getItem("cart")) || [],
-currentFilter: "all",
+currentFilter: "null",
 selectedDrink: null,
 selectedWeight: 1 // Default weight
 };
@@ -164,87 +164,58 @@ window.addEventListener("unhandledrejection", (event) => {
 });
 
 // ========== INITIALIZATION ==========
-document.addEventListener("DOMContentLoaded", async () => {
-DOM.drinksGrid.style.display = "grid";
-  // ✅ كود الأدمن (لوحده فوق)
+
+
+  // ✅ Firebase لوحده
+document.addEventListener("DOMContentLoaded", () => {
+  DOM.drinksGrid.style.display = "grid";
+
+  // ✅ كود الأدمن
   let clickCount = 0;
   let clickTimer = null;
 
   const adminTrigger = document.getElementById("admin-trigger");
 
   if (adminTrigger) {
-   adminTrigger.addEventListener("click", () => {
-  clickCount++;
+    adminTrigger.addEventListener("click", () => {
+      clickCount++;
 
-  clearTimeout(clickTimer);
-  clickTimer = setTimeout(() => {
-    clickCount = 0;
-  }, 1500);
+      clearTimeout(clickTimer);
+      clickTimer = setTimeout(() => {
+        clickCount = 0;
+      }, 1500);
 
-  if (clickCount === 3) {
-    clickCount = 0;
+      if (clickCount === 3) {
+        clickCount = 0;
 
-    const code = prompt("ادخل كود الادمن");
+        const code = prompt("ادخل كود الادمن");
 
-    if (code === "8800") {
-  isAdmin = true;
-  showToast("تم تفعيل الأدمن ✓");
-  openAdminPanel();
-} else {
-  showToast("كود غلط ❌");
-}
+        if (code === "8800") {
+          isAdmin = true;
+          showToast("تم تفعيل الأدمن ✓");
+          openAdminPanel();
+        } else {
+          showToast("كود غلط ❌");
+        }
       }
     });
   }
 
-  // ✅ Firebase لوحده
-if (firebaseAvailable && db) {
-  try {
-    let snapshot = await db.collection("products").get();
-
-    if (snapshot.empty) {
-      await uploadDefaultProducts();
-      snapshot = await db.collection("products").get();
-    }
-
-    const firebaseData = snapshot.docs.map(doc => ({
-      firebaseId: doc.id,
-      ...doc.data()
-    }));
-
-    drinks = await Promise.all(defaultDrinks.map(async localItem => {
-      const stableItem = await ensureStableFirebaseDoc(localItem, firebaseData);
-
-      return {
-        ...localItem,
-        firebaseId: stableItem?.firebaseId,
-        available: stableItem?.available ?? true
-      };
-    }));
-
-  } catch (error) {
-    console.error("🔥 Firebase مش شغال:", error);
-    drinks = defaultDrinks.map(localItem => ({
-      ...localItem,
-      available: true
-    }));
-  }
-} else {
-  console.warn("Firebase غير متاح، سيتم استخدام المنتجات الافتراضية فقط.");
-  drinks = defaultDrinks.map(localItem => ({
-    ...localItem,
+  // ✅ تحميل سريع (بدون انتظار Firebase)
+  drinks = defaultDrinks.map(d => ({
+    ...d,
     available: true
   }));
-}
 
- setupEventListeners();
-renderDrinks(); // 🔥 دي أهم سطر ناقص
-updateCartUI();
-hideLoadingScreen();
- 
+  setupEventListeners();
+  renderDrinks();
+  updateCartUI();
+  setTimeout(() => {
+  hideLoadingScreen();
+}, 2000); // 2 ثانية
 
- 
-
+  // 🔥 تحميل Firebase في الخلفية
+  loadFirebaseData();
 });
 // 👇 كود الأدمن
 // 👇 كود الأدمن
@@ -279,17 +250,17 @@ return drink.nameAr.includes("صحن");
 
 
 const gatoTypes = [
-  { id: '4', name: 'فراشات', keys: [] },
-  { id: '5', name: 'امواس', keys: [] },
-  { id: '6', name: ' نواشف', keys: [] },
-  { id: '13', name: ' كافيهات', keys: [] }
+  { id: '4', name: 'فراشات', keys: ['جاتو'] },
+  { id: '5', name: 'امواس', keys: ['جاتو'] },
+  { id: '6', name: ' نواشف', keys: ['جاتو'] },
+  { id: '13', name: ' كافيهات', keys: ['جاتو'] }
 ];
 
 const tartTypes = [
-  { id: '7', name: 'فراشات', keys: [] },
-  { id: '8', name: 'امواس', keys: [] },
-  { id: '9', name: 'اميركان ', keys: [] },
-  { id: '14', name: 'ميني اميركان ', keys: [] }
+  { id: '7', name: 'فراشات', keys: ['تورته'] },
+  { id: '8', name: 'امواس', keys: ['تورته'] },
+  { id: '9', name: 'اميركان ', keys: ['تورته'] },
+  { id: '14', name: 'ميني اميركان ', keys: ['تورته'] }
 ];
 
 const swareTypes = [
@@ -1144,3 +1115,38 @@ function showToast(message) {
     toast.style.opacity = "0";
   }, 2000);
 }   
+
+
+async function loadFirebaseData() {
+  if (!firebaseAvailable || !db) return;
+
+  try {
+    let snapshot = await db.collection("products").get();
+
+    if (snapshot.empty) {
+      await uploadDefaultProducts();
+      snapshot = await db.collection("products").get();
+    }
+
+    const firebaseData = snapshot.docs.map(doc => ({
+      firebaseId: doc.id,
+      ...doc.data()
+    }));
+
+    drinks = await Promise.all(defaultDrinks.map(async localItem => {
+      const stableItem = await ensureStableFirebaseDoc(localItem, firebaseData);
+
+      return {
+        ...localItem,
+        firebaseId: stableItem?.firebaseId,
+        available: stableItem?.available ?? true
+      };
+    }));
+
+    // 🔥 تحديث المنتجات بعد ما Firebase يخلص
+    renderDrinks();
+
+  } catch (error) {
+    console.error("Firebase error:", error);
+  }
+}
