@@ -6,7 +6,7 @@ nameAr: "تورته",
 nameEn: "",
 price: 0,
 category: "tart",
-image: "1.png",
+image: "tar.png",
 available: true,
 desc: "",
 ingredients: []
