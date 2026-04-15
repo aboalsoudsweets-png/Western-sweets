@@ -240,6 +240,7 @@ if (firebaseAvailable && db) {
  setupEventListeners();
 renderDrinks(); // 🔥 دي أهم سطر ناقص
 updateCartUI();
+hideLoadingScreen();
  
 
  
