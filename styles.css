@@ -1596,3 +1596,25 @@ footer p {
   transform: translateZ(0);
   backface-visibility: hidden;
 }
+
+
+
+
+
+.buttons-container {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+  justify-items: center;
+}
+
+.buttons-container button {
+  width: 90%;        /* بدل ما كان كبير */
+  padding: 10px 0;   /* يقلل الطول */
+  font-size: 14px;   /* خط أصغر */
+}
+
+.buttons-container button:last-child {
+  grid-column: 2 / 3;
+}
+
