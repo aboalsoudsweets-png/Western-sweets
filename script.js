@@ -1,1152 +1,778 @@
-// ========== DATA ==========
-const defaultDrinks = [
-{
-id: "a1",
-nameAr: "تورته",
-nameEn: "",
-price: 0,
-category: "tart",
-image: "tar.png",
-available: true,
-desc: "",
-ingredients: []
-},
-{
-id: "a2",
-nameAr: "جاتو",
-nameEn: "",
-price: 0,
-category: "gato",
-image: "1.png",
-available: true,
-desc: "",
-ingredients: []
-},
-{
-id: "a3",
-nameAr: "مولتن",
-nameEn: "",
-price: 0,
-category: "molten",
-image: "1.png",
-available: true,
-desc: "",
-ingredients: []
-},
-{
-id: "a4",
-nameAr: "كعكة",
-nameEn: "",
-price: 0,
-category: "torat",
-image: "1.png",
-available: true,
-desc: "",
-ingredients: []
-},
-{
-id: "a5",
-nameAr: "تشيز كيك",
-nameEn: "",
-price: 0,
-category: "cheesecake",
-image: "1.png",
-available: true,
-desc: "",
-ingredients: []
-},
-{
-id: "a6",
-nameAr: "بسكويت",
-nameEn: "",
-price: 0,
-category: "mille",
-image: "1.png",
-available: true,
-desc: "",
-ingredients: []
-},
-{
-id: "a7",
-nameAr: "ميلفيه",
-nameEn: "",
-price: 0,
-category: "eclair",
-image: "1.png",
-available: true,
-desc: "",
-ingredients: []
+let categoriesStatus = {
+  cakes: true,
+  oriental: true,
+  dates: true,
+  tarts: true
+};
+
+// ============================================
+// Global Variables
+// ============================================
+let currentLang = 'en';
+const cart = [];
+const WHATSAPP_BUSINESS_NUMBER = '201125933005';
+
+if (typeof data !== "undefined" && data) {
+  categoriesStatus = {
+    cakes: true,
+    GATO: true,
+    dates: true,
+    tarts: true,
+    ...data
+  };
 }
 
-];
+// ============================================
+// DOM Elements
+// ============================================
+const menuToggle = document.querySelector('.menu-toggle');
+const languageMenu = document.getElementById('languageMenu');
+const langButtons = document.querySelectorAll('.lang-btn');
+const cartToggle = document.querySelector('.cart-toggle');
+const cartSidebar = document.getElementById('cartSidebar');
+const cartClose = document.querySelector('.cart-close');
+const cartItemsContainer = document.getElementById('cartItems');
+const cartTotalElement = document.getElementById('cartTotal');
+const cartCountElement = document.querySelector('.cart-count');
+const clearCartBtn = document.getElementById('clearCartBtn');
+const checkoutBtn = document.getElementById('checkoutBtn');
 
+const checkoutModal = document.getElementById('checkoutModal');
+const modalClose = document.getElementById('modalClose');
+const cancelOrderBtn = document.getElementById('cancelOrderBtn');
+const orderForm = document.getElementById('orderForm');
+const orderSummary = document.getElementById('orderSummary');
+const orderTotal = document.getElementById('orderTotal');
 
+const categoryButtons = document.querySelectorAll('[data-category]');
+const detailsSection = document.getElementById('categoryDetails');
+const detailsTitle = document.getElementById('detailsTitle');
+const detailsText = document.getElementById('detailsText');
+const detailsGrid = document.getElementById('detailsGrid');
+const detailsClose = document.getElementById('detailsClose');
 
+// 🎬 Video Elements
+const videoElement = document.getElementById('videoPlayer');
+const lastFrameImage = document.getElementById('lastFrameImage');
+const heroSection = document.getElementById('heroSection');
+
+function safeAddEvent(element, event, callback) {
+  if (element) {
+    element.addEventListener(event, callback);
+  }
+}
+
+// Firebase config
 const firebaseConfig = {
-  apiKey: "AIzaSyBFBnaSspqZZ32YPQOlVFxLC23Ik5LalEM",
-  authDomain: "abo-alsoude.firebaseapp.com",
-  projectId: "abo-alsoude",
-  storageBucket: "abo-alsoude.firebasestorage.app",
-  messagingSenderId: "207897769616",
-  appId: "1:207897769616:web:28a481314624f92ea50a15",
-  measurementId: "G-C39993QJZF"
+  apiKey: "AIzaSyAJT6uIjmlFOvDy2owEUsZAwhCV8ReLkag",
+  authDomain: "western-78cd9.firebaseapp.com",
+  projectId: "western-78cd9",
+  storageBucket: "western-78cd9.appspot.com",
+  messagingSenderId: "148042495076",
+  appId: "1:148042495076:web:eae114fa658321524d1b71",
+  measurementId: "G-GLYH0DDVKQ",
+  databaseURL: "https://western-78cd9-default-rtdb.firebaseio.com"
 };
 
-let db = null;
-let firebaseAvailable = false;
-
-if (typeof firebase !== 'undefined' && firebase.initializeApp && firebase.firestore) {
-  try {
-    firebase.initializeApp(firebaseConfig);
-    db = firebase.firestore();
-    firebaseAvailable = true;
-  } catch (error) {
-    console.warn('Firebase initialization failed:', error);
-    firebaseAvailable = false;
-  }
-} else {
-  console.warn('Firebase is not available. Working in offline fallback mode.');
+// Initialize Firebase
+if (!firebase.apps.length) {
+  firebase.initializeApp(firebaseConfig);
 }
-
-
-
-
-let drinks = [];
-//=============clicl============
-let isAdmin = false;
-
-
-
-
- // ========== STATE MANAGEMENT ==========
-const state = {
-cart: JSON.parse(localStorage.getItem("cart")) || [],
-currentFilter: "null",
-selectedDrink: null,
-selectedWeight: 1 // Default weight
-};
-
-// ========== DOM ELEMENTS ==========
-const DOM = {
-loadingScreen: document.getElementById("loading-screen"),
-navbar: document.getElementById("navbar"),
-drinksGrid: document.getElementById("drinks-grid"),
-filterBtns: document.querySelectorAll(".filter-btn"),
-modalOverlay: document.getElementById("modal-overlay"),
-cartModalOverlay: document.getElementById("cart-modal-overlay"),
-cartIconWrap: document.getElementById("cart-icon-wrap"),
-cartCount: document.getElementById("cart-count"),
-toast: document.getElementById("toast"),
-modalClose: document.getElementById("modal-close"),
-cartModalClose: document.getElementById("cart-modal-close"),
-orderBtn: document.getElementById("order-btn"),
-cartItemsList: document.getElementById("cart-items-list"),
-cartTotalPrice: document.getElementById("cart-total-price"),
-checkoutWhatsapp: document.getElementById("checkout-whatsapp"),
-weightModalOverlay: document.getElementById("weight-modal-overlay"),
-weightModalClose: document.getElementById("weight-modal-close")
-};
-
-window.addEventListener("error", (event) => {
-  console.error("Global error:", event.error || event.message);
-  const loading = document.getElementById("loading-screen");
-  if (loading) {
-    loading.style.display = "none";
-  }
-});
-
-window.addEventListener("unhandledrejection", (event) => {
-  console.error("Unhandled promise rejection:", event.reason);
-  const loading = document.getElementById("loading-screen");
-  if (loading) {
-    loading.style.display = "none";
-  }
-});
-
-// ========== INITIALIZATION ==========
-
-
-  // ✅ Firebase لوحده
-document.addEventListener("DOMContentLoaded", () => {
-  DOM.drinksGrid.style.display = "grid";
-
-  // ✅ كود الأدمن
-  let clickCount = 0;
-  let clickTimer = null;
-
-  const adminTrigger = document.getElementById("admin-trigger");
-
-  if (adminTrigger) {
-    adminTrigger.addEventListener("click", () => {
-      clickCount++;
-
-      clearTimeout(clickTimer);
-      clickTimer = setTimeout(() => {
-        clickCount = 0;
-      }, 1500);
-
-      if (clickCount === 3) {
-        clickCount = 0;
-
-        const code = prompt("ادخل كود الادمن");
-
-        if (code === "8800") {
-          isAdmin = true;
-          showToast("تم تفعيل الأدمن ✓");
-          openAdminPanel();
-        } else {
-          showToast("كود غلط ❌");
-        }
-      }
-    });
-  }
-
-  // ✅ تحميل سريع (بدون انتظار Firebase)
-  drinks = defaultDrinks.map(d => ({
-    ...d,
-    available: true
-  }));
-
-  setupEventListeners();
-  renderDrinks();
-  updateCartUI();
-  setTimeout(() => {
-  hideLoadingScreen();
-}, 2000); // 2 ثانية
-
-  // 🔥 تحميل Firebase في الخلفية
-  loadFirebaseData();
-});
-// 👇 كود الأدمن
-// 👇 كود الأدمن
-// 👇 كود الأدمن هنا
-
-
-// ========== LOADING SCREEN ==========
-function hideLoadingScreen() {
-DOM.loadingScreen.classList.add("fade-out");
-setTimeout(() => {
-  DOM.loadingScreen.style.display = "none";
-}, 400);
-}
-
-// ========== NAVBAR SCROLL EFFECT ==========
-window.addEventListener("scroll", () => {
-if (window.scrollY > 50) {
-DOM.navbar.classList.add("scrolled");
-} else {
-DOM.navbar.classList.remove("scrolled");
-}
-});
-
-// ========== CHECK IF ITEM IS PLATE ==========
-function isPlateItem(drink) {
-return drink.nameAr.includes("صحن");
-}
-
-// ========== FILTER FUNCTIONALITY ==========
-
-
-
-
-const gatoTypes = [
-  { id: '4', name: 'فراشات', keys: ['جاتو'] },
-  { id: '5', name: 'امواس', keys: ['جاتو'] },
-  { id: '6', name: ' نواشف', keys: ['جاتو'] },
-  { id: '13', name: ' كافيهات', keys: ['جاتو'] }
-];
-
-const tartTypes = [
-  { id: '7', name: 'فراشات', keys: ['تورته'] },
-  { id: '8', name: 'امواس', keys: ['تورته'] },
-  { id: '9', name: 'اميركان ', keys: ['تورته'] },
-  { id: '14', name: 'ميني اميركان ', keys: ['تورته'] }
-];
-
-const swareTypes = [
-  { id: '10', name: '', keys: [] },
-  { id: '11', name: 'كريمه', keys: [] },
-  { id: '12', name: 'أصناف متنوعة', keys: [] }
-];
-
-function filterDrinks(category) {
-  state.currentFilter = category;
-  const subContainer = document.getElementById("sub-filters-container");
-
-  DOM.drinksGrid.style.display = "grid";
-
-  DOM.filterBtns.forEach(btn => {
-    btn.classList.toggle("active", btn.dataset.filter === category);
-  });
-
-  const isSubCategory = category === "gato" || category === "sware" || category === "tart";
-  if (isSubCategory) {
-    const types = category === "gato"
-      ? gatoTypes
-      : category === "sware"
-        ? swareTypes
-        : tartTypes;
-    subContainer.style.display = "flex";
-    subContainer.innerHTML = types.map(type => `
-      <button class="filter-btn sub-btn" onclick="filterSubCategory('${type.id}', '${category}')"
-        style="background: #1a1a1a; border: 1px solid #d4af37; font-size: 0.9rem; padding: 5px 15px;">
-        ${type.name}
-      </button>
-    `).join("");
-
-    const titleText = category === "gato"
-      ? "اختر نوع البقلاوة المفضل لديك"
-      : category === "sware"
-        ? "اختر نوع السواريه المفضل لديك"
-        : "اختر نوع التورت المفضل لديك";
-
-    DOM.drinksGrid.innerHTML = `
-      <p style="color:#aaa; width:100%; text-align:center;">
-        ${titleText}
-      </p>
-    `;
-  } else {
-    subContainer.style.display = "none";
-    renderDrinks();
-  }
-}
-
-function filterSubCategory(subId, category) {
-  const types = category === "gato"
-    ? gatoTypes
-    : category === "sware"
-      ? swareTypes
-      : tartTypes;
-  const typeData = types.find(t => t.id === subId);
-  if (!typeData) return;
-
-  const filtered = drinks.filter(d =>
-    d.category === category &&
-    typeData.keys.some(key => d.nameAr.includes(key))
-  );
-
-  document.querySelectorAll('.sub-btn').forEach(btn => {
-    btn.style.background = (btn.innerText === typeData.name) ? "#d4af37" : "#1a1a1a";
-    btn.style.color = (btn.innerText === typeData.name) ? "#000" : "#fff";
-  });
-
-  displayFilteredDrinks(filtered);
-}
-
-function displayFilteredDrinks(data) {
-  DOM.drinksGrid.innerHTML = "";
-
-  if (data.length === 0) {
-    DOM.drinksGrid.innerHTML = `
-      <p style="color:#aaa; width:100%; text-align:center;">قريباً...</p>
-    `;
-    return;
-  }
-
-  data.forEach((drink) => {
-    const card = createDrinkCard(drink);
-    DOM.drinksGrid.appendChild(card);
-    card.classList.add("visible");
-  });
-}
-
-// ملاحظة: إذا لم تعمل الفلاتر، تأكد أن كل عنصر في drinks لديه category صحيح و أن keys في النوع تحتوي على كلمات مطابقة لـ nameAr.
-
-// ========== RENDER DRINKS ==========
-// دالة لعرض المنتجات من Firebase
-function renderDrinks() {
-  const filtered = state.currentFilter === "all"
-    ? drinks
-    : drinks.filter(d => d.category === state.currentFilter);
-
-  DOM.drinksGrid.innerHTML = "";
-
-  filtered.forEach((drink) => {
-    const card = createDrinkCard(drink);
-    DOM.drinksGrid.appendChild(card);
-    card.classList.add("visible");
-  });
-}
-
- 
-
-async function uploadDefaultProducts() {
-  const snapshot = await db.collection("products").get();
-
-  if (!snapshot.empty) return; // لو فيه بيانات بلاش
-
-  for (let drink of defaultDrinks) {
-    await db.collection("products").doc(drink.id).set({
-      ...drink,
-      available: true // تأكد من إضافة هذا المفتاح لكل منتج
-    });
-  }
-
-  console.log("تم رفع المنتجات لأول مرة ✅");
-}
-
-async function ensureStableFirebaseDoc(localItem, firebaseData) {
-  const stableRef = db.collection("products").doc(localItem.id);
-  const stableSnapshot = await stableRef.get();
-
-  if (stableSnapshot.exists) {
-    const data = stableSnapshot.data();
-    if (!data.id) {
-      await stableRef.update({ id: localItem.id });
-    }
-    return {
-      firebaseId: localItem.id,
-      ...data
-    };
-  }
-
-  let firebaseItem = firebaseData.find(f => f.id === localItem.id || f.firebaseId === localItem.id);
-
-  if (!firebaseItem) {
-    firebaseItem = firebaseData.find(f =>
-      f.nameAr === localItem.nameAr &&
-      f.price === localItem.price &&
-      f.category === localItem.category
-    );
-  }
-
-  if (firebaseItem) {
-    const copy = {
-      ...firebaseItem,
-      id: localItem.id,
-      available: firebaseItem.available ?? true
-    };
-    await stableRef.set(copy);
-    return {
-      ...copy,
-      firebaseId: localItem.id
-    };
-  }
-
-  return null;
-}
-
-async function reloadDrinksFromFirebase() {
-  const snapshot = await db.collection("products").get();
-  const firebaseData = snapshot.docs.map(doc => ({
-    firebaseId: doc.id,
-    ...doc.data()
-  }));
-
-  drinks = await Promise.all(defaultDrinks.map(async localItem => {
-    const stableItem = await ensureStableFirebaseDoc(localItem, firebaseData);
-
-    return {
-      ...localItem,
-      firebaseId: stableItem?.firebaseId,
-      available: stableItem?.available ?? true
-    };
-  }));
-}
-
-// ========== CREATE CARD ==========
-function createDrinkCard(drink) {
-  const card = document.createElement("div");
- if (drink.available === false && !isAdmin) {
-  card.style.opacity = "0.5";
-}
-  card.className = "drink-card";
-
-  const qty = state.cart
-    .filter(item => item.id === drink.id)
-    .reduce((sum, item) => sum + item.quantity, 0);
-
-  const hasMultipleImages = drink.images && drink.images.length > 1;
-
-  card.innerHTML = `
-  <div class="card-img-wrap">
-
-    ${hasMultipleImages ? `
-      <div class="card-img-scroll">
-        ${drink.images.map(img => `
-          <img src="${img}" class="card-img-slide" />
-        `).join('')}
-      </div>
-
-      <div class="card-dots">
-        ${drink.images.map((_, i) => `
-          <span class="dot ${i === 0 ? 'active' : ''}"></span>
-        `).join('')}
-      </div>
-    ` : `
-      <img src="${drink.image || 'logo.png'}" class="card-img-slide" />
-    `}
-
-    <div class="card-overlay"></div>
-
-    ${qty > 0 ? `<div class="card-qty-badge">${qty}</div>` : ''}
-
-  </div>
-
-  <div class="card-body" style="padding: 12px;">
-
-    <div style="text-align: right;">
-      <div style="font-weight: bold; color: #fff; font-size: 1.1rem;">
-      
-        ${drink.nameAr}
-      </div>
-
-      <div style="color: #aaa; font-size: 0.85rem; margin-top: 5px;">
-        ${drink.desc || ''}
-      </div>
-    </div>
-
-    <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 12px; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 10px;">
-      
-     <div style="display:flex; flex-direction:column; align-items:flex-start; gap:5px;">
+const database = firebase.database();
+
+// ============================================
+// 🎬 Video Handler - Auto Play & Last Frame
+// ============================================
+function captureLastFrame() {
+  if (!videoElement) return;
+
+  const canvas = document.createElement('canvas');
+  canvas.width = videoElement.videoWidth;
+  canvas.height = videoElement.videoHeight;
   
-  <div style="color: #d4af37;">
-    <strong>${drink.price}</strong> ج.م
-  </div>
-
-  ${isAdmin ? `
-    <button onclick="toggleAvailability('${drink.id}')"
-    style="
-      background: #444;
-      color: white;
-      border: none;
-      padding: 4px 10px;
-      border-radius: 5px;
-      cursor: pointer;
-      font-size: 12px;
-    ">
-      ${drink.available === false ? 'اظهار' : 'اخفاء'}
-    </button>
-  ` : ''}
-
-</div>
-
-     
-<button
-  ${drink.available === false ? 'disabled' : ''}
-  onclick="handleQuickAdd(event, '${drink.id}')"
-  style="
-    background: ${drink.available === false ? '#555' : '#d4af37'};
-    color: ${drink.available === false ? '#aaa' : '#000'};
-    border: none;
-    padding: 6px 15px;
-    border-radius: 6px;
-    cursor: ${drink.available === false ? 'not-allowed' : 'pointer'};
-  "
->
-  ${drink.available === false ? '❌ غير متوفر' : (qty > 0 ? '➕ المزيد' : '🛍 اضف للسلة')}
-</button>
-
-
-    </div>
-
-  </div>
-  `;
-
-  return card;
+  const ctx = canvas.getContext('2d');
+  ctx.drawImage(videoElement, 0, 0);
+  
+  // تحويل الـ canvas إلى صورة
+  const imageUrl = canvas.toDataURL('image/jpeg', 0.95);
+  lastFrameImage.src = imageUrl;
+  
+  // إظهار الصورة وإخفاء الفيديو
+  videoElement.style.display = 'none';
+  lastFrameImage.style.display = 'block';
 }
 
-// ========== WEIGHT MODAL ==========
-function openWeightModal(drink) {
-state.selectedDrink = drink;
-state.selectedWeight = 1; // Reset to default
+function setupVideoHandling() {
+  if (!videoElement) return;
 
-const weightModalOverlay = document.getElementById("weight-modal-overlay");
-const weightButtons = document.querySelectorAll(".weight-btn");
+  // بدون controls للفيديو
+  videoElement.controls = false;
+  videoElement.muted = true;
+  videoElement.autoplay = true;
+  videoElement.playsInline = true;
 
-// Reset button styles
-weightButtons.forEach(btn => {
-btn.style.background = "#444";
-btn.style.color = "white";
+  // عند انتهاء الفيديو
+  videoElement.addEventListener('ended', () => {
+    captureLastFrame();
+  });
+
+  // إذا فشل تحميل الفيديو
+  videoElement.addEventListener('error', () => {
+    console.error('Video failed to load');
+  });
+
+  // تشغيل الفيديو
+  videoElement.play().catch(err => {
+    console.error('Autoplay failed:', err);
+  });
+}
+
+// ============================================
+// Language Toggle
+// ============================================
+safeAddEvent(menuToggle, 'click', () => {
+  languageMenu.hidden = !languageMenu.hidden;
 });
 
-// Set first button as selected
-weightButtons.forEach(btn => {
-  if (parseFloat(btn.dataset.multiplier) === 1) {
-    btn.style.background = "#d4af37";
-    btn.style.color = "#000";
+langButtons.forEach(btn => {
+  safeAddEvent(btn, 'click', () => {
+    currentLang = btn.dataset.lang;
+    updateLanguage();
+    languageMenu.hidden = true;
+  });
+});
+
+function updateLanguage() {
+  const htmlElement = document.documentElement;
+  htmlElement.lang = currentLang;
+  htmlElement.dir = currentLang === 'ar' ? 'rtl' : 'ltr';
+
+  document.querySelectorAll('[data-en][data-ar]').forEach(element => {
+    element.textContent = currentLang === 'en' ? element.dataset.en : element.dataset.ar;
+  });
+
+  updateCategoryDetails();
+}
+
+// ============================================
+// Shopping Cart
+// ============================================
+safeAddEvent(cartToggle, 'click', () => {
+  cartSidebar.hidden = !cartSidebar.hidden;
+});
+
+safeAddEvent(cartClose, 'click', (e) => {
+  e.preventDefault();
+  e.stopPropagation();
+  cartSidebar.hidden = true;
+});
+
+safeAddEvent(clearCartBtn, 'click', () => {
+  if (confirm(currentLang === 'en' ? 'Clear entire cart?' : 'مسح جميع العناصر؟')) {
+    cart.length = 0;
+    updateCartUI();
   }
 });
-weightButtons[0].style.color = "#000";
 
-weightModalOverlay.classList.remove("hidden");
-weightModalOverlay.classList.add("open");
-
-// Update price display
-updateWeightPrice(drink, 1);
-}
-
-function closeWeightModal() {
-const weightModalOverlay = document.getElementById("weight-modal-overlay");
-weightModalOverlay.classList.remove("open");
-weightModalOverlay.classList.add("closing");
-
-setTimeout(() => {
-weightModalOverlay.classList.add("hidden");
-weightModalOverlay.classList.remove("closing");
-}, 300);
-}
-
-function updateWeightPrice(drink, multiplier) {
-const priceDisplay = document.getElementById("weight-price");
-const newPrice = Math.round(drink.price * multiplier);
-priceDisplay.textContent = newPrice;
-
-// Update button styles
-const weightButtons = document.querySelectorAll(".weight-btn");
-weightButtons.forEach(btn => {
-if (parseFloat(btn.dataset.multiplier) === multiplier) {
-btn.style.background = "#d4af37";
-btn.style.color = "#000";
-} else {
-btn.style.background = "#444";
-btn.style.color = "white";
-}
-});
-}
-
-function selectWeight(multiplier) {
-state.selectedWeight = multiplier;
-if (state.selectedDrink) {
-updateWeightPrice(state.selectedDrink, multiplier);
-}
-}
-
-// ========== HANDLE QUICK ADD ==========
-function handleQuickAdd(event, drinkId) {
-  event.stopPropagation();
-  const drink = drinks.find(d => d.id === drinkId);
-
-  if (drink) {
-    addToCartSimple(drink); // 🔥 إضافة مباشرة بدون أوزان
+safeAddEvent(checkoutBtn, 'click', () => {
+  if (cart.length === 0) {
+    alert(currentLang === 'en' ? 'Your cart is empty!' : 'عربتك فارغة!');
+  } else {
+    cartSidebar.hidden = true;
+    showCheckoutModal();
   }
-}
-
-function addToCartWithWeight() {
-if (!state.selectedDrink) return;
-
-const drink = state.selectedDrink;
-const weight = state.selectedWeight;
-const finalPrice = Math.round(drink.price * weight);
-
-const uniqueId = drink.id + "_" + weight;
-
-const existingItem = state.cart.find(item => item.uniqueId === uniqueId);
-
-if (existingItem) {
-existingItem.quantity += 1;
-} else {
-state.cart.push({
-uniqueId: uniqueId,
-id: drink.id,
-nameAr: drink.nameAr,
-price: finalPrice,
-quantity: 1,
-image: drink.image,
-weight: weight,
-originalPrice: drink.price
 });
+
+function addToCart(itemName, price) {
+  const item = {
+    name: itemName,
+    price: price,
+    id: Date.now()
+  };
+  cart.push(item);
+  updateCartUI();
+  showNotification(currentLang === 'en' ? 'Added to cart!' : 'تمت الإضافة للسلة!');
 }
 
-saveCart();
-updateCartUI();
-
-const weightLabel = getWeightLabel(weight);
-showToast(`تم إضافة ${drink.nameAr} (${weightLabel}) ✓`);
-
-closeWeightModal();
-
-}
-
-// ========== MODAL MANAGEMENT ==========
-function openModal(drink) {
-state.selectedDrink = drink;
-
-document.getElementById("modal-img").src = drink.image;
-document.getElementById("modal-name-ar").textContent = drink.nameAr;
-document.getElementById("modal-name-en").textContent = drink.nameEn;
-document.getElementById("modal-price").textContent = drink.price;
-document.getElementById("modal-desc").textContent = drink.desc;
-
-const ingList = document.getElementById("modal-ing-list");
-ingList.innerHTML = drink.ingredients.map(ing => `<li>${ing}</li>`).join("");
-
-DOM.modalOverlay.classList.remove("hidden");
-DOM.modalOverlay.classList.add("open");
-}
-
-function closeModal() {
-DOM.modalOverlay.classList.remove("open");
-DOM.modalOverlay.classList.add("closing");
-
-setTimeout(() => {
-DOM.modalOverlay.classList.add("hidden");
-DOM.modalOverlay.classList.remove("closing");
-}, 300);
-}
-
-// ========== CART MANAGEMENT ==========
-function addToCartSimple(drink) {
-const uniqueId = drink.id + "_plate";
-
-const existingItem = state.cart.find(item => item.uniqueId === uniqueId);
-
-if (existingItem) {
-existingItem.quantity += 1;
-} else {
-state.cart.push({
-uniqueId: uniqueId,
-id: drink.id,
-nameAr: drink.nameAr,
-price: drink.price,
-quantity: 1,
-image: drink.image,
-weight: 1
-});
-}
-
-saveCart();
-updateCartUI();
-showToast(`تم إضافة ${drink.nameAr} ✓`);
-
-}
-
-function removeFromCart(uniqueId) {
-state.cart = state.cart.filter(item => item.uniqueId !== uniqueId);
-saveCart();
-updateCartUI();
-renderCartItems();
-}
-
-function updateCartQuantity(uniqueId, quantity) {
-const item = state.cart.find(item => item.uniqueId === uniqueId);
-
-if (item) {
-if (quantity <= 0) {
-removeFromCart(uniqueId);
-} else {
-item.quantity = quantity;
-saveCart();
-updateCartUI();
-renderCartItems();
-}
-}
-}
-
-function saveCart() {
-localStorage.setItem("cart", JSON.stringify(state.cart));
+function removeFromCart(itemId) {
+  const index = cart.findIndex(item => item.id === itemId);
+  if (index > -1) {
+    cart.splice(index, 1);
+    updateCartUI();
+  }
 }
 
 function updateCartUI() {
-const totalItems = state.cart.reduce((sum, item) => sum + item.quantity, 0);
-DOM.cartCount.textContent = totalItems;
+  cartCountElement.textContent = cart.length;
 
-const totalPrice = state.cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
-DOM.cartTotalPrice.textContent = totalPrice;
+  if (cart.length === 0) {
+    cartItemsContainer.innerHTML = `<p class="empty-cart" data-en="Your cart is empty" data-ar="عربتك فارغة">Your cart is empty</p>`;
+  } else {
+    cartItemsContainer.innerHTML = cart.map(item => `
+      <div class="cart-item">
+        <div class="cart-item-info">
+          <p class="cart-item-name">${item.name}</p>
+          <p class="cart-item-price">${item.price} جنيه</p>
+        </div>
+        <button class="cart-item-remove" onclick="removeFromCart(${item.id})" aria-label="Remove item">✕</button>
+      </div>
+    `).join('');
+  }
+
+  const total = cart.reduce((sum, item) => sum + item.price, 0);
+  cartTotalElement.textContent = total;
 }
 
-function openCartModal() {
-if (state.cart.length === 0) {
-showToast("السلة فارغة");
-return;
+// ============================================
+// Checkout Modal
+// ============================================
+function showCheckoutModal() {
+  updateOrderSummary();
+  checkoutModal.hidden = false;
+  document.body.style.overflow = 'hidden';
 }
 
-renderCartItems();
-DOM.cartModalOverlay.classList.remove("hidden");
-DOM.cartModalOverlay.classList.add("open");
+function closeCheckoutModal() {
+  checkoutModal.hidden = true;
+  document.body.style.overflow = 'auto';
 }
 
-function closeCartModal() {
-DOM.cartModalOverlay.classList.remove("open");
-DOM.cartModalOverlay.classList.add("closing");
+safeAddEvent(modalClose, 'click', closeCheckoutModal);
+safeAddEvent(cancelOrderBtn, 'click', closeCheckoutModal);
 
-setTimeout(() => {
-DOM.cartModalOverlay.classList.add("hidden");
-DOM.cartModalOverlay.classList.remove("closing");
-}, 300);
+safeAddEvent(checkoutModal, 'click', (e) => {
+  if (e.target === checkoutModal) {
+    closeCheckoutModal();
+  }
+});
+
+function updateOrderSummary() {
+  const total = cart.reduce((sum, item) => sum + item.price, 0);
+  orderSummary.innerHTML = cart.map(item => `
+    <div class="summary-item">
+      <span>${item.name}</span>
+      <span>${item.price} جنيه</span>
+    </div>
+  `).join('');
+  orderTotal.textContent = total;
 }
 
-function getWeightLabel(weight) {
-if (!weight) return ""; // 🔥 الحل هنا
-
-switch(weight) {
-case 1: return "كيلو";
-case 0.5: return "نصف كيلو";
-case 0.25: return "ربع كيلو";
-case 1.25: return "كيلو وربع";
-case 1.5: return "كيلو ونص";
-default: return weight + " كيلو";
-}
-}
-
-function renderCartItems() {
-if (state.cart.length === 0) {
-DOM.cartItemsList.innerHTML = "<p style='text-align:center; color: #aaa; padding: 2rem;'>لا توجد عناصر في السلة</p>";
-return;
-}
-
-let itemsHtml = state.cart.map(item => {
-
-const drinkData = drinks.find(d => d.id === item.id);
-
-const isPlate = drinkData ? isPlateItem(drinkData) : false;
-const weightLabel = getWeightLabel(item.weight);
-return `
-
-  <div class="cart-item" style="display: flex; justify-content: space-between; align-items: center;">  <div class="cart-item-info" style="flex: 1; text-align: right;">  
-    
-  <div class="cart-item-name" style="font-weight: bold; color: white;">  
-    ${item.nameAr}  
-  </div>  
-
-  ${!isPlate ? `  
-    <div style="color: #aaa; font-size: 0.85rem;">  
-      ${weightLabel}  
-    </div>  
-  ` : ''}  
-
-  <div style="color: #d4af37; font-size: 0.9rem;">  
-    ${item.price * item.quantity} ج.م  
-  </div>  
-
-</div>  
-  <div class="cart-qty-control" style="display: flex; align-items: center; gap: 10px; margin: 0 15px;">  
-    <button class="qty-btn" onclick="updateCartQuantity('${item.uniqueId}', ${item.quantity - 1})" style="background:#444; border:none; color:white; width:25px; height:25px; border-radius:4px; cursor:pointer;">−</button>  
-    <div class="qty-display" style="color: white;">${item.quantity}</div>  
-    <button class="qty-btn" onclick="updateCartQuantity('${item.uniqueId}', ${item.quantity + 1})" style="background:#444; border:none; color:white; width:25px; height:25px; border-radius:4px; cursor:pointer;">+</button>  
-  </div>  
-  <button class="cart-item-remove" onclick="removeFromCart('${item.uniqueId}')" style="background:transparent; border:none; color:#ff4444; cursor:pointer; font-size: 1.2rem;">✕</button>  
-</div>
-
-`;
-}).join("");
-
-const formHtml = `
-<div style="margin-top: 20px; display: flex; flex-direction: column; gap: 10px; direction: rtl; text-align: right;" id="customer-form">
-
-  <input 
-    id="cust-name" 
-    type="text" 
-    placeholder="الاسم"
-    style="padding:10px; border-radius:6px; border:none; background:#222; color:#fff;"
-  />
-
-  <input 
-    id="cust-phone" 
-    type="tel" 
-    placeholder="رقم الهاتف"
-    style="padding:10px; border-radius:6px; border:none; background:#222; color:#fff;"
-  />
-
-  <input 
-    id="cust-address" 
-    type="text" 
-    placeholder=" العنوان ( مدينة نصر و مصر الجديدة فقط)"
-    style="padding:10px; border-radius:6px; border:none; background:#222; color:#fff;"
-  />
-
-  <textarea 
-    id="cust-notes" 
-    placeholder="ملاحظات (اختياري)"
-    style="padding:10px; border-radius:6px; border:none; background:#222; color:#fff;"
-  ></textarea>
-
-</div>
-`;
-
-DOM.cartItemsList.innerHTML = itemsHtml + formHtml;
-}
-
-// ========== WHATSAPP CHECKOUT ==========
-function sendToWhatsapp() {
-if (state.cart.length === 0) {
-showToast("السلة فارغة");
-return;
-}
-
-const name = document.getElementById('cust-name').value.trim();
-const phone = document.getElementById('cust-phone').value.trim();
-const address = document.getElementById('cust-address').value.trim();
-const notes = document.getElementById('cust-notes').value.trim();
-
-if (!name || !phone || !address) {
-showToast("⚠️ يرجى إكمال بيانات التوصيل");
-document.getElementById('customer-form').scrollIntoView({ behavior: 'smooth' });
-return;
-}
-
-const cartSummary = state.cart.map(item => {
-const drinkData = drinks.find(d => d.id === item.id);
-const isPlate = drinkData ? isPlateItem(drinkData) : false;
-
-const weightLabel = getWeightLabel(item.weight);
-
-const weight = (!isPlate && weightLabel) ? `(${weightLabel})` : "";
-
-return `• ${item.nameAr}${weight} [الكمية: ${item.quantity}]`;
-}).join('\n');
-
-const totalPrice = state.cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
-
-const message = `
-طلب جديد من حلويات أبو السعود 🍰
-
-البيانات الشخصية:
-👤 الاسم: ${name}
-📞 الهاتف: ${phone}
-📍 العنوان: ${address}
-${notes ? `📝 ملاحظات: ${notes}` : ''}
-
-الطلبات:
-${cartSummary}
-
-ــــــــــــــــــــــــــــــــــــــــــــــــــ
-💰 الإجمالي: ${totalPrice} ج.م
-ــــــــــــــــــــــــــــــــــــــــــــــــــ
-`.trim();
-
-const whatsappURL = `https://wa.me/201070100122?text=${encodeURIComponent(message)}`;
-window.open(whatsappURL, "_blank");
-
-state.cart = [];
-saveCart();
-updateCartUI();
-closeCartModal();
-showToast("تم إرسال الطلب بنجاح ✓");
-}
-
-// ========== TOAST NOTIFICATIONS ==========
-
-
-
-
-
-
-
-
-
-
-
-
-
+// ============================================
+// Generate WhatsApp Message
+// ============================================
+function generateWhatsAppMessage(orderData) {
+  const itemsList = orderData.items.map(item => `• ${item.name}: ${item.price} جنيه`).join('\n');
   
+  let message = '';
+  
+  if (currentLang === 'ar') {
+    message = `
+📦 *طلب جديد من أبو السعود*
 
-// ========== EVENT LISTENERS ==========
-function setupEventListeners() {
-DOM.filterBtns.forEach(btn => {
-btn.addEventListener("click", () => filterDrinks(btn.dataset.filter));
-});
+👤 *الاسم:* ${orderData.name}
+📱 *رقم الهاتف:* ${orderData.phone}
+🗺️ *العنوان:* ${orderData.address}
 
-DOM.modalClose.addEventListener("click", closeModal);
-DOM.modalOverlay.addEventListener("click", (e) => {
-if (e.target === DOM.modalOverlay) closeModal();
-});
+📝 *الطلب:*
+${itemsList}
 
-DOM.orderBtn.addEventListener("click", () => {
-if (state.selectedDrink) {
-if (isPlateItem(state.selectedDrink)) {
-addToCartSimple(state.selectedDrink);
-} else {
-closeModal();
-openWeightModal(state.selectedDrink);
-}
-}
-});
+💰 *الإجمالي:* ${orderData.total} جنيه
 
-// Weight modal close buttons
-const weightModalClose = document.getElementById("weight-modal-close");
-if (weightModalClose) {
-weightModalClose.addEventListener("click", closeWeightModal);
-}
+📌 *ملاحظات:* ${orderData.notes || 'بدون ملاحظات'}
+    `.trim();
+  } else {
+    message = `
+📦 *New Order from Abu Al-Saud*
 
-const weightModalOverlay = document.getElementById("weight-modal-overlay");
-if (weightModalOverlay) {
-weightModalOverlay.addEventListener("click", (e) => {
-if (e.target === weightModalOverlay) closeWeightModal();
-});
-}
+👤 *Name:* ${orderData.name}
+📱 *Phone:* ${orderData.phone}
+🗺️ *Address:* ${orderData.address}
 
-// Weight selection buttons
-const weightBtns = document.querySelectorAll(".weight-btn");
-weightBtns.forEach(btn => {
-btn.addEventListener("click", () => {
-const multiplier = parseFloat(btn.dataset.multiplier);
-selectWeight(multiplier);
-});
-});
+📝 *Items:*
+${orderData.items.map(item => `• ${item.name}: ${item.price} EGP`).join('\n')}
 
-DOM.cartModalClose.addEventListener("click", closeCartModal);
-DOM.cartModalOverlay.addEventListener("click", (e) => {
-if (e.target === DOM.cartModalOverlay) closeCartModal();
-});
+💰 *Total:* ${orderData.total} EGP
 
-DOM.checkoutWhatsapp.addEventListener("click", sendToWhatsapp);
-DOM.cartIconWrap.addEventListener("click", openCartModal);
-
-document.addEventListener("keydown", (e) => {
-if (e.key === "Escape") {
-closeModal();
-closeCartModal();
-closeWeightModal();
-}
-});
+📌 *Notes:* ${orderData.notes || 'No notes'}
+    `.trim();
+  }
+  
+  return encodeURIComponent(message);
 }
 
-// Add function to confirm weight selection
-function confirmWeightSelection() {
-addToCartWithWeight();
+// ============================================
+// Handle Form Submission
+// ============================================
+safeAddEvent(orderForm, 'submit', (e) => {
+  e.preventDefault();
+  
+  const formData = new FormData(orderForm);
+  const orderData = {
+    name: formData.get('name'),
+    phone: formData.get('phone'),
+    address: formData.get('address'),
+    notes: formData.get('notes'),
+    items: cart.map(item => ({ name: item.name, price: item.price })),
+    total: cart.reduce((sum, item) => sum + item.price, 0),
+    date: new Date().toLocaleString(currentLang === 'ar' ? 'ar-EG' : 'en-US')
+  };
+
+  const orders = JSON.parse(localStorage.getItem('orders') || '[]');
+  orders.push(orderData);
+  localStorage.setItem('orders', JSON.stringify(orders));
+
+  const whatsappMessage = generateWhatsAppMessage(orderData);
+  const whatsappLink = `https://wa.me/${WHATSAPP_BUSINESS_NUMBER}?text=${whatsappMessage}`;
+
+  window.open(whatsappLink, '_blank');
+
+  alert(currentLang === 'en' 
+    ? `Thank you ${orderData.name}! Opening WhatsApp to confirm your order.` 
+    : `شكراً ${orderData.name}! جاري فتح الواتس لتأكيد طلبك.`);
+
+  cart.length = 0;
+  updateCartUI();
+  orderForm.reset();
+  closeCheckoutModal();
+
+  console.log('Order Data:', orderData);
+});
+
+// ============================================
+// Category Data
+// ============================================
+const categoryImages = {
+  cakes: '14.JPG',
+  GATO: '14.1.JPG',
+  dates: 'category-dates.jpg',
+  tarts: 'category-tarts.jpg'
+};
+
+const categories = {
+  cakes: {
+    titleEn: 'Cakes Menu',
+    titleAr: 'منيو التورت',
+    textEn: 'Click on any product to add to cart:',
+    textAr: 'اضغط على المنتج لإضافته للسلة:',
+    items: [
+      
+      {id:2 , nameEn: 'Vanilla Nutella Cake', nameAr: 'كيك فانيليا بالنوتيلا', price: 210, image: '2.JPG',available: true },
+      {id:3 , nameEn: 'Creamy Strawberry Cake', nameAr: 'كيك الفراولة الكريمي', price: 235, image: '3.JPG',available: true },
+      {id:4 , nameEn: 'Red Berry Cake', nameAr: 'كيك التوت الأحمر', price: 240, image: '4.JPG' ,available: true},
+      {id:5 , nameEn: 'Chocolate Ball Cake', nameAr: 'كيك كرة الشوكولاتة', price: 255, image: '5.JPG' ,available: true},
+      {id:6 , nameEn: 'Vanilla Fruit Cake', nameAr: 'كيك الفانيليا مع الفواكه', price: 225, image: '6.JPG' ,available: true},
+      {id:7 , nameEn: 'Cream Caramel Cake', nameAr: 'كيك الكريم كراميل', price: 230, image: '7.JPG',available: true },
+      {id:8 , nameEn: 'Mille-feuille Cake', nameAr: 'كيك الميلفوي', price: 245, image: '8.JPG' ,available: true},
+      {id:10 , nameEn: 'Tiramisu Cake', nameAr: 'كيك التيراميسو', price: 250, image: '10.JPG' ,available: true},
+      {id:11 , nameEn: 'Tiramisu Cake', nameAr: 'كيك التيراميسو', price: 250, image: '14.JPG' ,available: true},
+      {id:12 , nameEn: 'Tiramisu Cake', nameAr: 'كيك التيراميسو', price: 250, image: '11.JPG' ,available: true},
+      {id:13 , nameEn: 'Tiramisu Cake', nameAr: 'كيك التيراميسو', price: 250, image: '12.JPG' ,available: true},
+      {id:13 , nameEn: 'Tiramisu Cake', nameAr: 'كيك التيراميسو', price: 250, image: '13.JPG' ,available: true},
+      {id:9 , nameEn: 'Hazelnut Cake', nameAr: 'كيك البندق', price: 260, image: '9.JPG',available: true },
+      {id:1 , nameEn: 'Luxury Chocolate Cake', nameAr: 'كيك شوكولاتة فاخرة', price: 220, image: '1.JPG' ,available: true}
+
+    ]
+  },
+  GATO: {
+    titleEn: 'GATO Sweets Menu',
+    titleAr: 'منيو الحلويات الشرقية',
+    textEn: 'Our most famous GATO varieties:',
+    textAr: 'أشهر أصنافنا الشرقية:',
+    items: [
+      {id:11 , nameEn: 'Nablusi Kunafa', nameAr: 'كنافة نابلسية', price: 95, image: '14.1.JPG' ,available: true},
+      {id:13 , nameEn: 'Pistachio Klaj', nameAr: 'كلاج بالفستق', price: 120, image: '15.JPG',available: true },
+      {id:14 , nameEn: 'Pistachio Ghraybeh', nameAr: 'غريبة الفستق', price: 90, image: '16.JPG' ,available: true},
+      {id:15 , nameEn: 'Eid Cake', nameAr: 'كعك العيد', price: 85, image: '17.JPG' ,available: true},
+      {id:16 , nameEn: 'Date Jam', nameAr: 'مربى التمر', price: 105, image: '18.JPG' ,available: true},
+      {id:17 , nameEn: 'Salty Soup', nameAr: 'شوربة موالح', price: 80, image: '19.JPG' ,available: true},
+      {id:18 , nameEn: 'Cheese Qatayef', nameAr: 'قطايف بالجبنة', price: 115, image: '20.JPG',available: true },
+      {id:19 , nameEn: 'Pistachio Muhhallabia', nameAr: 'مهلبية بالفستق', price: 70, image: '21.JPG' ,available: true},
+      {id:20 , nameEn:'Plain Rami', nameAr: 'رامي السادة', price:75, image:'22.JPG' ,available:true},
+      {id:21 , nameEn:'Plain Rami', nameAr: 'رامي السادة', price:75, image:'23.JPG' ,available:true},
+      {id:41 , nameEn:'Plain Rami', nameAr: 'رامي السادة', price:75, image:'24.JPG' ,available:true},
+      {id:42 , nameEn:'Plain Rami', nameAr: 'رامي السادة', price:75, image:'25.JPG' ,available:true},
+      {id:43 , nameEn:'Plain Rami', nameAr: 'رامي السادة', price:75, image:'26.JPG' ,available:true},
+      {id:45 , nameEn:'Plain Rami', nameAr: 'رامي السادة', price:75, image:'27.JPG' ,available:true}
+    ]
+  },
+  dates: {
+    titleEn: 'Date Boxes Menu',
+    titleAr: 'منيو صناديق التمر',
+    textEn: 'Best date boxes for gifts and occasions:',
+    textAr: 'أفضل صناديق التمر للهدايا والمناسبات:',
+    items: [
+      {id:21 , nameEn: 'Almond Date Box', nameAr: 'صندوق تمر لوز', price: 180, image: 'dates-1.jpg',available: true },
+      {id:22 , nameEn: 'Pistachio Date Box', nameAr: 'صندوق تمر فستق', price: 190, image: 'dates-2.jpg',available: true },
+      {id:23 , nameEn: 'Honey Date Box', nameAr: 'صندوق تمر بالعسل', price: 185, image: 'dates-3.jpg' ,available: true},
+      {id:24 , nameEn: 'Premium Box', nameAr: 'صندوق بريميوم', price: 220, image: 'dates-4.jpg',available: true },
+      {id:25 , nameEn: 'Date with Nuts Box', nameAr: 'صندوق تمر مع مكسرات', price: 200, image: 'dates-5.jpg' ,available: true},
+      {id:26 , nameEn: 'Elegant Gift Box', nameAr: 'صندوق هدية أنيق', price: 210, image: 'dates-6.jpg' ,available: true},
+      {id:27 , nameEn: 'Tamriah Date Box', nameAr: 'صندوق تمر تمرية', price: 170, image: 'dates-7.jpg' ,available: true},
+      {id:28 , nameEn: 'Lace Date Box', nameAr: 'صندوق دانتيل تمر', price: 225, image: 'dates-8.jpg' ,available: true},
+      {id:29 , nameEn: 'Luxury Plain Box', nameAr: 'صندوق سادة فاخر', price: 160, image: 'dates-9.jpg' ,available: true},
+      {id:30 , nameEn: 'Cinnamon Date Box', nameAr: 'صندوق تمر بالقرفة', price: 175, image: 'dates-10.jpg' ,available: true}
+    ]
+  },
+  tarts: {
+    titleEn: 'Tarts Menu',
+    titleAr: 'منيو التارت',
+    textEn: 'Available tart varieties:',
+    textAr: 'أنواع التارت المتاحة:',
+    items: [
+      {id:31 , nameEn: 'Strawberry Tart', nameAr: 'تارت الفراولة', price: 145, image: 'tart-1.jpg' ,available: true},
+      {id:32 , nameEn: 'Lemon Tart', nameAr: 'تارت الليمون', price: 140, image: 'tart-2.jpg',available: true },
+      {id:33 , nameEn: 'Berry Tart', nameAr: 'تارت التوت', price: 150, image: 'tart-3.jpg' ,available: true},
+      {id:34 , nameEn: 'Salted Caramel Tart', nameAr: 'تارت الكراميل المالح', price: 155, image: 'tart-4.jpg',available: true },
+      {id:35 , nameEn: 'Apple Tart', nameAr: 'تارت التفاح', price: 135, image: 'tart-5.jpg' ,available: true},
+      {id:36 , nameEn: 'Dark Chocolate Tart', nameAr: 'تارت الشوكولاتة الداكنة', price: 160, image: 'tart-6.jpg',available: true },
+      {id:37 , nameEn: 'Hazelnut Tart', nameAr: 'تارت البندق', price: 165, image: 'tart-7.jpg' ,available: true},
+      {id:38 , nameEn: 'Mixed Fruit Tart', nameAr: 'تارت الفواكه المشكلة', price: 170, image: 'tart-8.jpg' ,available: true},
+      {id:39 , nameEn: 'Walnut Honey Tart', nameAr: 'تارت الجوز والعسل', price: 150, image: 'tart-9.jpg' ,available: true},
+      {id:40 , nameEn: 'White Chocolate Tart', nameAr: 'تارت الشوكولاتة البيضاء', price: 155, image: 'tart-10.jpg',available: true}
+    ]
+  }
+};
+
+// ============================================
+// Category Display
+// ============================================
+function updateCategoryDetails() {
+  if (!detailsSection.hidden) {
+    const categoryName = Object.keys(categories).find(cat =>
+      categories[cat].titleEn === detailsTitle.textContent ||
+      categories[cat].titleAr === detailsTitle.textContent
+    );
+
+    if (categoryName) {
+      showCategory(categoryName);
+    }
+  }
 }
 
+function showCategory(category) {
+    
+  const data = categories[category];
+  if (!data) return;
 
-
-
-// دالة لتغيير التوفر (إخفاء أو إظهار)
-async function toggleAvailability(id) {
-  const product = drinks.find(d => d.id === id);
-
-  if (!product) {
-    showToast("خطأ في المنتج ❌");
+  // 🔴 فحص إذا كان القسم مقفول
+  if (!categoriesStatus[category]) {
+    const closedMsg = currentLang === 'en' 
+      ? `${category.toUpperCase()} section is currently closed!` 
+      : `قسم ${data.titleAr} مقفول حالياً!`;
+    alert(closedMsg);
+    detailsSection.hidden = true;
     return;
   }
 
-  const stableRef = db.collection("products").doc(id);
-  const stableSnap = await stableRef.get();
-  const newStatus = !(product.available ?? true);
+  detailsTitle.textContent = currentLang === 'en' ? data.titleEn : data.titleAr;
+  detailsText.textContent = currentLang === 'en' ? data.textEn : data.textAr;
+  
+  detailsGrid.innerHTML = data.items
+    .map(item => {
+      const itemName = currentLang === 'en' ? item.nameEn : item.nameAr;
+      const buttonText = currentLang === 'en' ? 'Add to Cart' : 'أضف للسلة';
+      const isAvailable = item.available !== false;
 
-  if (stableSnap.exists) {
-    try {
-      await stableRef.update({ available: newStatus });
-    } catch (error) {
-      console.error("Firebase update failed:", error);
-      showToast(`خطأ في التحديث: ${error.message || 'غير معروف'}`);
-      return;
-    }
-  } else {
-    const snapshot = await db.collection("products").get();
-    const firebaseData = snapshot.docs.map(doc => ({
-      firebaseId: doc.id,
-      ...doc.data()
-    }));
-    const stableItem = await ensureStableFirebaseDoc(product, firebaseData);
+      return `
+        <div class="product-card ${!isAvailable ? 'unavailable' : ''}">
+          <img src="${item.image}" alt="${itemName}" loading="lazy">
 
-    try {
-      await stableRef.set({
-        ...product,
-        id,
-        available: newStatus
-      });
-    } catch (error) {
-      console.error("Firebase create fallback failed:", error);
-      showToast(`خطأ في التحديث: ${error.message || 'غير معروف'}`);
-      return;
-    }
+          <h4>${itemName}</h4>
+
+          <p class="price">${item.price} جنيه</p>
+
+          ${isAvailable 
+            ? `<button class="add-to-cart-btn" onclick="addToCart('${itemName.replace(/'/g, "\\'")}', ${item.price})">
+                ${buttonText}
+              </button>`
+            : `<button class="add-to-cart-btn disabled" disabled>
+                ${currentLang === 'en' ? 'Not Available' : 'غير متوفر'}
+              </button>`
+          }
+        </div>
+      `;
+    })
+    .join('');
+  
+  detailsSection.hidden = false;
+}
+
+categoryButtons.forEach(button => {
+  safeAddEvent(button, 'click', () => showCategory(button.dataset.category));  
+  const category = button.dataset.category;
+  if (categoryImages[category]) {
+    const gradient = 'linear-gradient(180deg, rgba(34, 20, 9, 0.08), rgba(34, 20, 9, 0.35))';
+    button.style.backgroundImage = `${gradient}, url('${categoryImages[category]}')`;
   }
+});
 
-  showToast("تم التحديث ✅");
+safeAddEvent(detailsClose, 'click', () => {
+  detailsSection.hidden = true;
+});
 
-  await reloadDrinksFromFirebase();
-
-  renderAdminPanel();
-  renderDrinks();
+// ============================================
+// Utility Functions
+// ============================================
+function showNotification(message) {
+  const notification = document.createElement('div');
+  notification.className = 'notification';
+  notification.textContent = message;
+  document.body.appendChild(notification);
+  
+  setTimeout(() => notification.remove(), 2000);
 }
 
+// ============================================
+// Initialize on Page Load
+// ============================================
+document.addEventListener('DOMContentLoaded', function() {
+  updateLanguage();
+  
+  // 🔴 تحميل الأقسام من Firebase
+  loadCategoriesFromFirebase();
+  loadCategoriesData();
+  
+  // 🎬 إعداد الفيديو
+  setupVideoHandling();
+});
 
+// 🔴 تحميل حالات الأقسام من Firebase عند البداية
+function loadCategoriesFromFirebase() {
+  database.ref('categoriesStatus').on('value', (snapshot) => {
+    const data = snapshot.val();
 
+    if (typeof data !== "undefined" && data) {
+      categoriesStatus = {
+        ...categoriesStatus,
+        ...data
+      };
+    }
 
+    console.log('Categories:', categoriesStatus);
 
-function renderAdminPanel() {
-  const container = document.getElementById("admin-products");
-
-  container.innerHTML = drinks.map(drink => `
-    <div style="border-bottom:1px solid #444; padding:10px 0; text-align:right;">
-      
-      <div>${drink.nameAr}</div>
-
-      <button onclick="toggleAvailability('${drink.id}')"
-      style="margin-top:5px; padding:5px 10px; cursor:pointer;">
-        ${drink.available === false ? '❌ غير متوفر' : '✅ متوفر'}
-      </button>
-
-    </div>
-  `).join("");
+    if (adminPanelVisible) {
+      renderAdminCategories();
+    }
+  });
 }
 
+// ========== Admin Panel ==========
+const adminTriggerElement = document.querySelector("#abu-al-saud-title");
+let clickCount = 0;
+let clickTimer;
+let adminPanelVisible = false;
+
+if (adminTriggerElement) {
+  adminTriggerElement.addEventListener('click', () => {
+    clickCount++;
+    clearTimeout(clickTimer);
+    if (clickCount === 3) {
+      clickCount = 0;
+      showAdminLogin();
+    } else {
+      clickTimer = setTimeout(() => { clickCount = 0; }, 1000);
+    }
+  });
+}
+
+function showAdminLogin() {
+  const password = prompt("ادخل كلمة السر:");
+  if (password === "123456") {
+    openAdminPanel();
+  } else if (password !== null) {
+    alert("كلمة سر خاطئة.");
+  }
+}
 
 function openAdminPanel() {
-  document.getElementById("admin-panel").style.right = "0";
-  renderAdminPanel();
+  document.getElementById('adminPanel').style.display = 'block';
+  adminPanelVisible = true;
+  renderAdminCategories();
 }
 
 function closeAdminPanel() {
-  document.getElementById("admin-panel").style.right = "-100%";
+  document.getElementById('adminPanel').style.display = 'none';
+  adminPanelVisible = false;
+}
+window.closeAdminPanel = closeAdminPanel;
+
+// =========== Admin Categories Control ==========
+function renderAdminCategories() {
+  const container = document.getElementById('adminCategories');
+  container.innerHTML = "<h3>تحكم بالأقسام:</h3>";
+
+  Object.keys(categories).forEach(category => {
+    const cat = categories[category];
+
+    const status = categoriesStatus[category] !== undefined 
+      ? categoriesStatus[category] 
+      : true;
+
+    const statusText = status ? "مفتوح ✅" : "مغلق ❌";
+    const btnText = status ? "قفل القسم" : "فتح القسم";
+    const btnStyle = status 
+      ? "background:red; color:white;" 
+      : "background:green; color:white;";
+
+    const categoryDiv = document.createElement('div');
+    categoryDiv.style.cssText = 'margin:10px 0; padding:10px; border:1px solid #ccc; border-radius:5px;';
+
+    let html = `
+      <div style="display:flex; justify-content:space-between; align-items:center;">
+        <div>
+          <span style="font-weight:bold;">${category}</span>
+          <span style="margin-left:10px; color:${status ? 'green' : 'red'}; font-weight:bold;">
+            ${statusText}
+          </span>
+        </div>
+
+        <button class="toggle-category-btn" data-category="${category}" data-status="${!status}"
+          style="${btnStyle} padding:6px 12px; border:none; border-radius:5px; cursor:pointer;">
+          ${btnText}
+        </button>
+      </div>
+
+      <hr>
+    `;
+
+    // 👇 ده الجزء الصح بتاع المنتجات
+    (cat.items || []).forEach(item => {
+      const isAvailable = item.available !== false;
+
+      html += `
+        <div style="display:flex; justify-content:space-between; align-items:center; margin:5px 0;">
+          <span>
+            ${currentLang === 'en' ? item.nameEn : item.nameAr}
+          </span>
+
+          <button class="toggle-availability-btn" data-category="${category}" data-item-id="${item.id}"
+            style="padding:5px 10px; border:none; border-radius:5px;
+            background:${isAvailable ? 'red' : 'green'}; color:white; cursor:pointer;">
+            ${isAvailable ? 'إخفاء' : 'إظهار'}
+          </button>
+        </div>
+      `;
+    });
+
+    categoryDiv.innerHTML = html;
+    container.appendChild(categoryDiv);
+  });
+
+  // ✅ أضف event listeners بعد ما تنشئ العناصر
+  attachAdminEventListeners();
 }
 
+// ✅ دالة جديدة لتوصيل الـ events
+function attachAdminEventListeners() {
+  // زراير قفل/فتح الأقسام
+  document.querySelectorAll('.toggle-category-btn').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      const category = e.target.dataset.category;
+      const newStatus = e.target.dataset.status === 'true';
+      toggleCategoryStatus(category, newStatus);
+    });
+  });
 
+  // زراير إظهار/إخفاء المنتجات
+  document.querySelectorAll('.toggle-availability-btn').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      const category = e.target.dataset.category;
+      const itemId = parseInt(e.target.dataset.itemId);
+      toggleAvailability(category, itemId);
+    });
+  });
+}
+window.attachAdminEventListeners = attachAdminEventListeners;
 
+function toggleCategoryStatus(category, newStatus) {
+  // ✅ حدّث محليًا أولاً
+  categoriesStatus[category] = newStatus;
+  renderAdminCategories();
 
-
-function showToast(message) {
-  let toast = document.getElementById("toast");
-
-  if (!toast) {
-    toast = document.createElement("div");
-    toast.id = "toast";
-
-    toast.style.position = "fixed";
-    toast.style.bottom = "20px";
-    toast.style.left = "50%";
-    toast.style.transform = "translateX(-50%)";
-    toast.style.background = "#d4af37";
-    toast.style.color = "#000";
-    toast.style.padding = "12px 20px";
-    toast.style.borderRadius = "10px";
-    toast.style.fontSize = "14px";
-    toast.style.zIndex = "99999";
-    toast.style.opacity = "0";
-    toast.style.transition = "0.3s";
-
-    document.body.appendChild(toast);
+  // إذا تم قفل القسم وهو مفتوح، اغلقه
+  if (!newStatus && !detailsSection.hidden) {
+    const currentCategory = Object.keys(categories).find(c =>
+      categories[c].titleEn === detailsTitle.textContent ||
+      categories[c].titleAr === detailsTitle.textContent
+    );
+    if (currentCategory === category) {
+      detailsSection.hidden = true;
+    }
   }
 
-  toast.textContent = message;
-  toast.style.opacity = "1";
+  // حفظ في Firebase
+  database.ref(`categoriesStatus/${category}`).set(newStatus)
+    .then(() => {
+      showNotification(newStatus ? "✅ تم فتح القسم" : "✅ تم قفل القسم");
+    })
+    .catch(err => {
+      console.error(err);
+      showNotification("❌ خطأ في تحديث القسم");
+      // أرجع للحالة السابقة
+      categoriesStatus[category] = !newStatus;
+      renderAdminCategories();
+    });
+}
+window.toggleCategoryStatus = toggleCategoryStatus;
 
-  setTimeout(() => {
-    toast.style.opacity = "0";
-  }, 2000);
-}   
+function toggleAvailability(category, itemId) {
+  // ✅ حدّث محليًا أولاً
+  const itemIndex = categories[category].items.findIndex(item => item.id === itemId);
+  
+  if (itemIndex === -1) {
+    showNotification("الصنف غير موجود");
+    return;
+  }
 
+  // عكس حالة التوفر
+  categories[category].items[itemIndex].available = !categories[category].items[itemIndex].available;
 
-async function loadFirebaseData() {
-  if (!firebaseAvailable || !db) return;
+  // ✅ أعد الرسم فوراً
+  renderAdminCategories();
+  if (!detailsSection.hidden) {
+    showCategory(category);
+  }
 
-  try {
-    let snapshot = await db.collection("products").get();
+  // حفظ في Firebase في الخلفية
+  const updatedArray = categories[category].items;
+  database.ref(`categories/${category}/items`).set(updatedArray)
+    .then(() => {
+      const isAvailable = categories[category].items[itemIndex].available;
+      showNotification(isAvailable ? "✅ تم إظهار الصنف" : "✅ تم إخفاء الصنف");
+    })
+    .catch(err => {
+      console.error(err);
+      showNotification("❌ خطأ في حفظ البيانات");
+      // أرجع للحالة السابقة إذا فشل الحفظ
+      categories[category].items[itemIndex].available = !categories[category].items[itemIndex].available;
+      renderAdminCategories();
+    });
+}
+window.toggleAvailability = toggleAvailability;
 
-    if (snapshot.empty) {
-      await uploadDefaultProducts();
-      snapshot = await db.collection("products").get();
+function loadCategoriesData() {
+  database.ref('categories').on('value', (snapshot) => {
+    const data = snapshot.val();
+    if (!data) return;
+
+    Object.keys(categories).forEach(cat => {
+      if (data[cat] && Array.isArray(data[cat].items)) {
+        categories[cat].items = data[cat].items;
+      }
+    });
+
+    if (!detailsSection.hidden) {
+      const current = Object.keys(categories).find(c =>
+        categories[c].titleEn === detailsTitle.textContent ||
+        categories[c].titleAr === detailsTitle.textContent
+      );
+
+      if (current) showCategory(current);
     }
 
-    const firebaseData = snapshot.docs.map(doc => ({
-      firebaseId: doc.id,
-      ...doc.data()
-    }));
-
-    drinks = await Promise.all(defaultDrinks.map(async localItem => {
-      const stableItem = await ensureStableFirebaseDoc(localItem, firebaseData);
-
-      return {
-        ...localItem,
-        firebaseId: stableItem?.firebaseId,
-        available: stableItem?.available ?? true
-      };
-    }));
-
-    // 🔥 تحديث المنتجات بعد ما Firebase يخلص
-    renderDrinks();
-
-  } catch (error) {
-    console.error("Firebase error:", error);
-  }
+    if (adminPanelVisible) {
+      renderAdminCategories();
+    }
+  });
 }
+window.loadCategoriesData = loadCategoriesData;
