@@ -8,10 +8,88 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="styles.css" />
+  <style>
+    /* ============================================
+       SPLASH SCREEN
+       ============================================ */
+    .splash-screen {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: #000;
+      z-index: 10000;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+    }
+
+    .splash-screen.hidden {
+      display: none;
+    }
+
+    .splash-video-container {
+      width: 100%;
+      height: 100%;
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .splash-video {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+
+    .splash-overlay {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      width: 100%;
+      height: 100px;
+      background: linear-gradient(to top, rgba(0,0,0,0.8), transparent);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .splash-text {
+      color: #c9973a;
+      font-family: 'Playfair Display', Georgia, serif;
+      font-size: 2rem;
+      font-weight: 700;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      text-align: center;
+    }
+  </style>
 </head>
 <body>
 
-  <div class="page-shell">
+  <!-- ============================================
+       SPLASH SCREEN
+       ============================================ -->
+  <div class="splash-screen" id="splashScreen">
+    <div class="splash-video-container">
+      <video id="splashVideo" class="splash-video" autoplay muted playsinline>
+        <source src="your-video.mp4" type="video/mp4">
+      </video>
+      <div class="splash-overlay">
+        <div class="splash-text">ABU AL-SAUD</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================================
+       MAIN APP
+       ============================================ -->
+  <div class="page-shell" id="mainApp" style="display: none;">
     <header class="topbar">
       <div id="abu-al-saud-title" class="brand" data-en="ABU AL-SAUD" data-ar="أبو السعود">ABU AL-SAUD</div>
       <div class="actions">
@@ -128,6 +206,28 @@
 
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+  <script>
+    // ============================================
+    // SPLASH SCREEN HANDLER
+    // ============================================
+    const splashScreen = document.getElementById('splashScreen');
+    const splashVideo = document.getElementById('splashVideo');
+    const mainApp = document.getElementById('mainApp');
+
+    // إخفاء الـ splash screen عند انتهاء الفيديو
+    splashVideo.addEventListener('ended', () => {
+      splashScreen.classList.add('hidden');
+      mainApp.style.display = 'block';
+    });
+
+    // للأمان: إذا لم يشتغل الفيديو بعد 10 ثواني، اخفي الـ splash
+    setTimeout(() => {
+      if (!splashScreen.classList.contains('hidden')) {
+        splashScreen.classList.add('hidden');
+        mainApp.style.display = 'block';
+      }
+    }, 10000);
+  </script>
   <script src="script.js"></script>
 
 </body>
