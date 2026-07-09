@@ -1,3 +1,6 @@
+// ============================================
+// Categories & Defaults
+// ============================================
 let categoriesStatus = {
   cakes: true,
   gato: true,
@@ -10,7 +13,8 @@ let categoriesStatus = {
 // ============================================
 let currentLang = 'en';
 const cart = [];
-const WHATSAPP_BUSINESS_NUMBER = '201125933005';
+// default number (Egyptian local 01070100112 -> international 201070100112)
+let WHATSAPP_BUSINESS_NUMBER = '201070100112';
 
 if (typeof data !== "undefined" && data) {
   categoriesStatus = {
@@ -74,6 +78,26 @@ if (!firebase.apps.length) {
   firebase.initializeApp(firebaseConfig);
 }
 const database = firebase.database();
+
+// === Load WhatsApp number from Firebase settings (optional override) ===
+database.ref('settings/whatsappNumber').on('value', (snapshot) => {
+  const val = snapshot.val();
+  if (val) {
+    // keep digits only
+    let n = String(val).replace(/\D/g, '');
+    // if user provided local Egyptian number like 01070100112, convert to international 20...
+    if (n.length === 11 && n.startsWith('0')) {
+      n = '20' + n.slice(1);
+    }
+    // basic validation: ensure at least country code + number
+    if (n.length >= 8) {
+      WHATSAPP_BUSINESS_NUMBER = n;
+      console.log('Updated WhatsApp number from Firebase:', WHATSAPP_BUSINESS_NUMBER);
+    } else {
+      console.warn('Invalid whatsappNumber in Firebase settings:', val);
+    }
+  }
+});
 
 // 🔴 تحميل حالات الأقسام من Firebase عند البداية
 function loadCategoriesFromFirebase() {
@@ -290,7 +314,17 @@ safeAddEvent(orderForm, 'submit', (e) => {
   localStorage.setItem('orders', JSON.stringify(orders));
 
   const whatsappMessage = generateWhatsAppMessage(orderData);
-  const whatsappLink = `https://wa.me/${WHATSAPP_BUSINESS_NUMBER}?text=${whatsappMessage}`;
+
+  // Ensure number is digits-only and present
+  const number = String(WHATSAPP_BUSINESS_NUMBER || '').replace(/\D/g, '');
+  if (!number) {
+    alert(currentLang === 'en' 
+      ? 'WhatsApp number is not configured. Please contact admin.' 
+      : 'رقم الواتساب غير مضبوط. يرجى التواصل مع المدير.');
+    return;
+  }
+
+  const whatsappLink = `https://wa.me/${number}?text=${whatsappMessage}`;
 
   window.open(whatsappLink, '_blank');
 
@@ -324,11 +358,12 @@ const categories = {
     textAr: 'اضغط على المنتج لإضافته للسلة:',
     items: [
       
-      {id:2 , nameEn: 'Vanilla Nutella Cake', nameAr: 'تورتة فانيليا نوتيلا', descriptionEn: ['White Sponge Cake', 'Nutella Cream', 'Crisp Crust', 'Imported Cherry', 'White Cream', 'Chocolate Glaze'], descriptionAr: ['كيك إسفنج أبيض', 'كريمة نوتيلا', 'كرست كريب', 'شري مستورد', 'كريمة لباني', 'جليز شوكولاتة'], price: 950, image: 'IMG_8981.JPG',available: true },
-      {id:3 , nameEn: 'Creamy Strawberry Cake', nameAr: 'تورتة الفراولة الكريمية', descriptionEn: ['White Sponge Cake', 'Lebanese Cream', 'Imported Strawberry', 'Tropical Fruits', 'Imported Cherry', 'Strawberry Glaze'], descriptionAr: ['كيك إسفنج أبيض', 'كريمة لباني', 'فراولة مستوردة', 'فاكهة استوائية', 'شري مستورد', 'جليز فراولة'], price: 900, image: 'IMG_8980.JPG',available: true },
-      {id:4 , nameEn: 'Red Berry Cake', nameAr: 'تورتة التوت الأحمر', descriptionEn: ['White Sponge Cake', 'Lebanese Cream', 'Mixed Berry Filling', 'Cocoa Butter', 'Chocolate Glaze', 'Tropical Fruits'], descriptionAr: ['كيك إسفنج أبيض', 'كريمة لباني', 'حشوة توت مشكل', 'زبدة كاكاو', 'جليز شوكولاتة', 'فاكهة استوائية'], price: 950, image: 'IMG_8979.JPG' ,available: true},
-      {id:5 , nameEn: 'Chocolate Ball Cake', nameAr: 'تورتة كرات الشوكولاتة', descriptionEn: ['Magic Mousse', 'Dark Mousse', 'White Mousse', 'Crisp Crust', 'Cocoa Butter', 'Chocolate Glaze'], descriptionAr: ['موس ماجيك', 'موس درك', 'موس وايت', 'كرست كريب', 'زبدة كاكاو', 'جليز شوكولاتة'], price: 1150, image: 'IMG_8978.JPG' ,available: true},
-      {id:7 , nameEn: 'Cream Caramel Cake', nameAr: 'تورتة الكراميل الكريمية', descriptionEn: ['White Cake', 'Caramel Mousse', 'Toffee Caramel', 'Walnuts', 'Cocoa Butter', 'Caramel Glaze'], descriptionAr: ['كيك وايت', 'موس كراميل', 'توفي كراميل', 'عين جمل', 'زبدة كاكاو', 'جليز كراميل'], price: 550, image: 'IMG_8977.JPG',available: true }
+      {id:2 , nameEn: 'caramel Cake', nameAr: 'تورتة كاراميل', descriptionEn: ['White Sponge Cake', 'Nutella Cream', 'Crisp Crust', 'Imported Cherry', 'White Cream', 'Chocolate Glaze'], descriptionAr: ['كيك إسفنج أبيض', 'كريمة نوتيلا', 'كرست كريب', 'شري مستورد', 'كريمة لباني', 'جليز شوكولاتة'], price: 950, image: 'IMG_8981.JPG',available: true },
+      {id:3 , nameEn: 'mango Cake', nameAr: 'تورتة مانجا', descriptionEn: ['White Sponge Cake', 'Lebanese Cream', 'Imported Strawberry', 'Tropical Fruits', 'Imported Cherry', 'Strawberry Glaze'], descriptionAr: ['كيك إسفنج أبيض', 'كريمة لباني', 'فراولة مستوردة', 'فاكهة استوائية', 'شري مستورد', 'جليز فراولة'], price: 900, image: 'IMG_8980.JPG',available: true },
+      {id:4 , nameEn: 'American Lotus Cake', nameAr: 'تورتة اميريكان لوتس', descriptionEn: ['White Sponge Cake', 'Lebanese Cream', 'Mixed Berry Filling', 'Cocoa Butter', 'Chocolate Glaze', 'Tropical Fruits'], descriptionAr: ['كيك إسفنج أبيض', 'كريمة لباني', 'حشوة توت مشكل', 'زبدة كاكاو', 'جليز شوكولاتة', 'فاكهة استوائية'], price: 950, image: 'IMG_8979.JPG' ,available: true},
+      {id:5 , nameEn: 'pistachio Cake', nameAr: 'تورتة بيستاشيو', descriptionEn: ['Magic Mousse', 'Dark Mousse', 'White Mousse', 'Crisp Crust', 'Cocoa Butter', 'Chocolate Glaze'], descriptionAr: ['موس ماجيك', 'موس درك', 'موس وايت', 'كرست كريب', 'زبدة كاكاو', 'جليز شوكولاتة'], price: 1150, image: 'IMG_8978.JPG' ,available: true},
+      {id:6 , nameEn: 'black Forest Cake', nameAr: 'تورتة وايت فوريست', descriptionEn: ['Chocolate Cake', 'Caramel Mousse', 'Toffee Caramel', 'Walnuts', 'Cocoa Butter', 'Caramel Glaze'], descriptionAr: ['كيك شوكليت', 'موس كراميل', 'توفي كراميل', 'عين جمل', 'زبدة كاكاو', 'جليز كراميل'], price: 550, image: 'IMG_8976.JPG' ,available: true},
+      {id:7 , nameEn: 'White Forest Cake', nameAr: 'تورتة بلاك فوريست', descriptionEn: ['White Cake', 'Caramel Mousse', 'Toffee Caramel', 'Walnuts', 'Cocoa Butter', 'Caramel Glaze'], descriptionAr: ['كيك وايت', 'موس كراميل', 'توفي كراميل', 'عين جمل', 'زبدة كاكاو', 'جليز كراميل'], price: 550, image: 'IMG_8977.JPG',available: true }
 
     ]
   },
@@ -361,10 +396,10 @@ const categories = {
       {id:45.10 , nameEn:'Honey Cake', nameAr: 'هاني كيك', descriptionEn: ['Honey Cake', 'Cheese Cream', 'Honey'], descriptionAr: ['كيك هاني', 'كريمه تشيز', 'عسل نحل'], price:100, image:'IMG_8969.JPG' ,available:true},
       {id:45.11 , nameEn:'Mango Tart', nameAr: 'تارت مانجا', descriptionEn: ['White Mousse', 'Natural Mango Filling', 'Cocoa Butter', 'Pectin'], descriptionAr: ['موس وايت', 'حشو مانجو طبيعي', 'زبده الكاكاو', 'بكتين'], price:100, image:'IMG_8968.JPG' ,available:true},
       {id:45.12 , nameEn:'Vanilla Taco', nameAr: 'تاكو فانيليا', descriptionEn: ['Sablé biscuit', 'Pastry cream', 'Nutella', 'Crisp Crust'], descriptionAr: ['بسكويت سابليا', 'كريمه باستري', 'نوتيلا', 'كورست كريب'], price:85, image:'IMG_8967.JPG' ,available:true},
-      {id:45.13 , nameEn:'Magic Gateau', nameAr: 'جاتوة ماجيك', descriptionEn: ['White Mousse', 'Gianduja Mousse', 'Fudge Cake', 'Crisp Crust', 'Nutella'], descriptionAr: ['موس وايت', 'موس جندوجيا', 'فادج كيك', 'كورست كريب', 'نوتيلا'], price:90, image:'IMG_8966.JPG' ,available:true},
+      {id:45.13 , nameEn:'Magic Gateau', nameAr: 'جاتوة ماجيك', descriptionEn: [ 'Gianduja Mousse', 'Fudge Cake', 'Crisp Crust', 'Nutella'], descriptionAr: [ 'موس جندوجيا', 'فادج كيك', 'كورست كريب', 'نوتيلا'], price:90, image:'IMG_8966.JPG' ,available:true},
       {id:45.14 , nameEn:'Nutella Millie', nameAr: 'ميلفية نوتيلا', descriptionEn: ['Mille-feuille', 'Pastry cream', 'Nutella', 'Crisp Crust'], descriptionAr: ['ميلفيه', 'كريمه باستري', 'نوتيلا', 'كورست كريب'], price:95, image:'IMG_8965.JPG' ,available:true},
       {id:45.15 , nameEn:'Red Velvet Gateau', nameAr: 'جاتوة ريدفيلفيد', descriptionEn: ['Red Velvet Cake', 'Cheese Cream', 'Imported Cherry Filling', 'Tropical Fruits'], descriptionAr: ['كيك ريد ڤلڤد', 'كريمه تشيز', 'حشو شري مستورد', 'فاكهه استوائية'], price:90, image:'IMG_8964.JPG' ,available:true},
-      {id:45.16 , nameEn:'Chocolate Taco', nameAr: 'تاكو الشوكولاتة', descriptionEn: ['Sablé biscuit', 'Pastry cream', 'Chocolate', 'Crisp Crust'], descriptionAr: ['بسكويت سابليا', 'كريمه باستري', 'شوكليت', 'كورست كريب'], price:100, image:'IMG_8913.JPG' ,available:true}
+      {id:45.16 , nameEn:'festival', nameAr: 'فيستيفال', descriptionEn: ['Sablé biscuit', 'Pastry cream', 'Chocolate', 'Crisp Crust'], descriptionAr: ['بسكويت سابليا', 'كريمه باستري', 'شوكليت', 'كورست كريب'], price:100, image:'IMG_8913.JPG' ,available:true}
     ]
   },
   icecream: {
