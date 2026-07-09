@@ -63,14 +63,14 @@ function safeAddEvent(element, event, callback) {
 
 // Firebase config
 const firebaseConfig = {
-  apiKey: "AIzaSyAJT6uIjmlFOvDy2owEUsZAwhCV8ReLkag",
-  authDomain: "western-78cd9.firebaseapp.com",
-  projectId: "western-78cd9",
-  storageBucket: "western-78cd9.appspot.com",
-  messagingSenderId: "148042495076",
-  appId: "1:148042495076:web:eae114fa658321524d1b71",
-  measurementId: "G-GLYH0DDVKQ",
-  databaseURL: "https://western-78cd9-default-rtdb.firebaseio.com"
+  apiKey: "AIzaSyBnzrJmGMrBjmVGBdbPvnkq77iKrOTU8X4",
+  authDomain: "joose-316ed.firebaseapp.com",
+  databaseURL: "https://joose-316ed-default-rtdb.europe-west1.firebasedatabase.app",
+  projectId: "joose-316ed",
+  storageBucket: "joose-316ed.firebasestorage.app",
+  messagingSenderId: "444136668923",
+  appId: "1:444136668923:web:34fc206d27aa03dc5a3a5e",
+  measurementId: "G-Q14MSZD4HH"
 };
 
 // Initialize Firebase
@@ -688,11 +688,14 @@ function toggleCategoryStatus(category, newStatus) {
     }
   }
 
+console.log("Saving:", category, newStatus);
+
   // حفظ في Firebase
-  database.ref(`categoriesStatus/${category}`).set(newStatus)
-    .then(() => {
-      showNotification(newStatus ? "✅ تم فتح القسم" : "✅ تم قفل القسم");
-    })
+ database.ref(`categoriesStatus/${category}`).set(newStatus)
+.then(() => {
+    console.log("Saved");
+    showNotification(newStatus ? "✅ تم فتح القسم" : "✅ تم قفل القسم");
+})
     .catch(err => {
       console.error(err);
       showNotification("❌ خطأ في تحديث القسم");
