@@ -432,12 +432,7 @@ const categories = {
     textEn: 'Beautiful accessories and gift items:',
     textAr: 'إكسسوارات وهدايا جميلة:',
     items: [
-      {id:61 , nameEn: 'Decorative Box', nameAr: 'صندوق ديكوري', descriptionEn: 'Elegant gift box for special occasions', descriptionAr: 'صندوق هدية أنيق للمناسبات الخاصة', price: 75, image: 'acc-1.jpg',available: true },
-      {id:62 , nameEn: 'Ribbon Pack', nameAr: 'عبوة أشرطة', descriptionEn: 'Assorted ribbons for decoration', descriptionAr: 'أشرطة متنوعة للزينة', price: 40, image: 'acc-2.jpg',available: true },
-      {id:63 , nameEn: 'Gift Bag', nameAr: 'حقيبة هدية', descriptionEn: 'Premium quality gift bags', descriptionAr: 'حقائب هدية بجودة عالية', price: 30, image: 'acc-3.jpg' ,available: true},
-      {id:64 , nameEn: 'Candle Set', nameAr: 'مجموعة شموع', descriptionEn: 'Luxurious scented candles set', descriptionAr: 'مجموعة شموع معطرة فاخرة', price: 85, image: 'acc-4.jpg',available: true },
-      {id:65 , nameEn: 'Chocolate Wrapper', nameAr: 'غلاف شوكولاتة', descriptionEn: 'Beautiful chocolate wrappers', descriptionAr: 'أغلفة شوكولاتة جميلة', price: 25, image: 'acc-5.jpg' ,available: true},
-      {id:66 , nameEn: 'Luxury Package', nameAr: 'عبوة فاخرة', descriptionEn: 'Complete luxury packaging solution', descriptionAr: 'حل تغليف فاخر كامل', price: 120, image: 'acc-6.jpg',available: true }
+   
     ]
   }
 };
